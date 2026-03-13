@@ -40,14 +40,14 @@ Novos models devem ser registrados em `app/models/__init__.py` para que o Alembi
 
 ## Principais bibliotecas
 
-| Biblioteca                  | Função                                                   |
-| --------------------------- | ---------------------------------------------------------- |
-| **FastAPI**           | Framework web async, geração automática de docs OpenAPI |
+| Biblioteca                  | Função                                               |
+| --------------------------- | -----------------------------------------------------|
+| **FastAPI**           | Framework web async, geração automática de docs OpenAPI    |
 | **SQLAlchemy 2.0**    | ORM para mapeamento de tabelas e queries                   |
-| **Pydantic v2**       | Validação de dados de entrada e saída                   |
-| **pydantic-settings** | Leitura de variáveis de ambiente via `.env`             |
+| **Pydantic v2**       | Validação de dados de entrada e saída                      |
+| **pydantic-settings** | Leitura de variáveis de ambiente via `.env`                |
 | **Alembic**           | Migrations de banco de dados                               |
-| **passlib[bcrypt]**   | Hash seguro de senhas                                      |
+| **bcrypt**            | Hash seguro de senhas                                      |
 | **pytest**            | Testes automatizados                                       |
 
 ---
