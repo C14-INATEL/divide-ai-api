@@ -1,11 +1,13 @@
 from sqlalchemy.orm import Session
+from typing import Optional
 from app.models.user import User
+from app.models.enums.pix_key_type import PixKeyType
 
 class UserRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, email: str, name: str, hashed_password: str, pix_key: str, pix_key_type) -> User:
+    def create(self, email: str, name: str, hashed_password: str, pix_key: Optional[str], pix_key_type: Optional[PixKeyType]) -> User:
         user = User(
             email=email,
             name=name,

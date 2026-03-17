@@ -7,8 +7,8 @@ class UserCreate(BaseModel):
     email: EmailStr
     name: str
     password: str
-    pix_key: str
-    pix_key_type: PixKeyType
+    pix_key: Optional[str] = None
+    pix_key_type: Optional[PixKeyType] = None
 
 class UserResponse(BaseModel):
     id: UUID
