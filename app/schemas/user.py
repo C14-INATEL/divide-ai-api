@@ -11,17 +11,20 @@ class UserCreate(BaseModel):
     pix_key_type: Optional[PixKeyType] = None
 
     @field_validator('password')
-    @classmethod
-    def validate_password_strength(cls, v):
-        if len(v) < 8:
-            raise ValueError('Senha deve ter pelo menos 8 caracteres')
-        if not any(char.isupper() for char in v):
-            raise ValueError('Senha deve conter pelo menos uma letra maiúscula')
-        if not any(char.islower() for char in v):
-            raise ValueError('Senha deve conter pelo menos uma letra minúscula')
-        if not any(char.isdigit() for char in v):
-            raise ValueError('Senha deve conter pelo menos um número')
-        return v
+@classmethod
+def validate_password_strength(cls, v):
+    rules = [
+        (r'.{8,}',           'Senha deve ter pelo menos 8 caracteres'),
+        (r'[A-Z]',           'Senha deve conter pelo menos uma letra maiúscula'),
+        (r'[a-z]',           'Senha deve conter pelo menos uma letra minúscula'),
+        (r'\d',              'Senha deve conter pelo menos um número'),
+    ]
+
+    for pattern, message in rules:
+        if not re.search(pattern, v):
+            raise ValueError(message)
+
+    return v
 
     @field_validator('pix_key')
     @classmethod
