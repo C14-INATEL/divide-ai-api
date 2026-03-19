@@ -13,6 +13,9 @@ class UserService:
         if self.repo.get_by_email(data.email):
             raise AppException(status_code=400, detail="Email já cadastrado")
 
+        if data.pix_key and self.repo.get_by_pix_key(data.pix_key):
+            raise AppException(status_code=400, detail="Chave PIX já cadastrada")
+
         return self.repo.create(
             email=data.email,
             name=data.name,
