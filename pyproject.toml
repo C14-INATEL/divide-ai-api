@@ -9,6 +9,7 @@ dependencies = [
     "alembic",
     "bcrypt",
     "psycopg2-binary",
+    "PyJWT",
 ]
 
 [project.optional-dependencies]
