@@ -4,6 +4,7 @@ from pydantic import BaseModel, EmailStr
 from app.database import get_db
 from app.services.user_service import UserService
 from app.utils.api_errors import raise_error_response, GenericBadRequest
+from app.utils.jwt import create_access_token
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -21,5 +22,5 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
     if not user:
         raise_error_response(GenericBadRequest({"description": "Credenciais inválidas"}))
     
-    token = f"fake-token-for-{user.id}"
+    token = create_access_token({"sub": str(user.id), "email": user.email})
     return LoginResponse(access_token=token)
