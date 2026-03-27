@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from uuid import UUID
+from typing import Optional
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import UserCreate, UserUpdate, UserPasswordUpdate
 from app.utils.security import hash_password, verify_password
@@ -60,3 +61,8 @@ class UserService:
         user.password = hash_password(data.new_password)
 
         return self.repo.update(user)
+
+    def search_users(self, name: Optional[str] = None, limit: int = 50) -> list[User]:
+        if name:
+            return self.repo.search_by_name(name, limit)
+        return self.repo.get_all(limit)
