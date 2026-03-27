@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
@@ -22,5 +24,5 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
     if not user:
         return raise_error_response(GenericBadRequest({"description": "Credenciais inválidas"}))
     
-    token = create_access_token({"sub": str(user.id), "email": user.email})
+    token = create_access_token({"sub": str(user.id), "email": user.email}, expires_delta=timedelta(hours=24))
     return LoginResponse(access_token=token)
