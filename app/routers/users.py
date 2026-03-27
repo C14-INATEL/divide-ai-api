@@ -1,12 +1,23 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from uuid import UUID
+from typing import Optional
 from app.database import get_db
 from app.exceptions import AppException
 from app.services.user_service import UserService
 from app.schemas.user import UserCreate, UserResponse, UserUpdate, UserPasswordUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+@router.get("/", response_model=list[UserResponse])
+def search_users(
+    name: Optional[str] = Query(None, description="Filter users by name (case-insensitive partial match)"),
+    db: Session = Depends(get_db)
+):
+    try:
+        return UserService(db).search_users(name)
+    except AppException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
 
 @router.post("/", response_model=UserResponse, status_code=201)
 def create_user(data: UserCreate, db: Session = Depends(get_db)):

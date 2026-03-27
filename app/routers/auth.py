@@ -20,7 +20,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 def login(data: LoginRequest, db: Session = Depends(get_db)):
     user = UserService(db).authenticate(data.email, data.password)
     if not user:
-        raise_error_response(GenericBadRequest({"description": "Credenciais inválidas"}))
+        return raise_error_response(GenericBadRequest({"description": "Credenciais inválidas"}))
     
     token = create_access_token({"sub": str(user.id), "email": user.email})
     return LoginResponse(access_token=token)

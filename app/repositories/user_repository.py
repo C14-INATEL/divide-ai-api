@@ -35,3 +35,14 @@ class UserRepository:
         self.db.commit()
         self.db.refresh(user)
         return user
+
+    def search_by_name(self, name: str, limit: int = 50) -> list[User]:
+        return (
+            self.db.query(User)
+            .filter(User.name.ilike(f"%{name}%"))
+            .limit(limit)
+            .all()
+        )
+
+    def get_all(self, limit: int = 50) -> list[User]:
+        return self.db.query(User).limit(limit).all()
