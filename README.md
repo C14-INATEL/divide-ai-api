@@ -73,6 +73,9 @@ alembic upgrade head
 
 # 4. Rodar o servidor
 python run.py
+
+#5. Rodar testes
+python -m pytest caminhodoteste/arquivo_teste.py -v -s
 ```
 
 Docs disponíveis em: http://localhost:8000/docs
