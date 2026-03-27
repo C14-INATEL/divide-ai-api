@@ -55,24 +55,26 @@ Novos models devem ser registrados em `app/models/__init__.py` para que o Alembi
 ## Requisitos
 
 * Python 3.11+
-* [uv](https://github.com/astral-sh/uv)
+* [uv](https://github.com/astral-sh/uv) - gerenciador de pacotes e ambiente virtual
+
+As dependências são gerenciadas via `pyproject.toml` (PEP 621).
 
 ---
 
 ## Como rodar
 
 ```bash
-# 1. Instalar dependências
-pip install -e ".[dev]"
+# 1. Instalar dependências (uv sync lê pyproject.toml)
+uv sync
 
 # 2. Copiar e configurar variáveis de ambiente
 cp .env.example .env
 
 # 3. Aplicar migrations
-alembic upgrade head
+uv run alembic upgrade head
 
 # 4. Rodar o servidor
-python run.py
+uv run python run.py
 ```
 
 Docs disponíveis em: http://localhost:8000/docs
@@ -83,10 +85,10 @@ Docs disponíveis em: http://localhost:8000/docs
 
 ```bash
 # Rodar todos os testes
-pytest
+uv run pytest
 
 # Com cobertura
-pytest --cov=app
+uv run pytest --cov=app
 ```
 
 ---
@@ -95,13 +97,13 @@ pytest --cov=app
 
 ```bash
 # Criar nova migration
-alembic revision --autogenerate -m "descricao"
+uv run alembic revision --autogenerate -m "descricao"
 
 # Aplicar
-alembic upgrade head
+uv run alembic upgrade head
 
 # Reverter uma
-alembic downgrade -1
+uv run alembic downgrade -1
 ```
 
 ---
