@@ -30,7 +30,7 @@ class TestUserSchema(unittest.TestCase):
 
     def test_wrong_email(self):
         '''
-        É para dar erro quando eu crio um user com um email incorreto (sem arroba)
+        É necessário que dê erro quando eu crio um user com um email incorreto (sem arroba)
         '''
         with self.assertRaises(ValidationError):
             UserCreate(email='john', name='John', password='aAa!2341aaaaaaaaa')
