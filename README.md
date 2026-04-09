@@ -74,8 +74,8 @@ alembic upgrade head
 # 4. Rodar o servidor
 python run.py
 
-#5. Rodar testes
-python -m pytest caminhodoteste/arquivo_teste.py -v -s
+# 5. Rodar testes
+python -m unittest discover tests -v
 ```
 
 Docs disponíveis em: http://localhost:8000/docs
@@ -86,10 +86,10 @@ Docs disponíveis em: http://localhost:8000/docs
 
 ```bash
 # Rodar todos os testes
-pytest
+python -m unittest discover tests -v
 
-# Com cobertura
-pytest --cov=app
+# Rodar testes de um arquivo específico
+python -m unittest tests.unit.schemas.test_user -v
 ```
 
 ---
