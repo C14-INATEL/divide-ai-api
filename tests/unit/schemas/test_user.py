@@ -28,10 +28,10 @@ class TestUserSchema(unittest.TestCase):
         with self.assertRaises(ValidationError):
             UserCreate(email='john@gmail.com', name='John', password='AAAAAAAAAAAAA')
 
-    def test_only_lower(self):
+    def test_wrong_email(self):
         '''
-        É para dar erro quando eu crio um user com uma senha que só possui caracteres minúsculos
+        É para dar erro quando eu crio um user com um email incorreto (sem arroba)
         '''
         with self.assertRaises(ValidationError):
-            UserCreate(email='john@gmail.com', name='John', password='aaaaaaaaaaaaaa')
+            UserCreate(email='john', name='John', password='aAa!2341aaaaaaaaa')
 
