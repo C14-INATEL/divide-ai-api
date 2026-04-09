@@ -1,15 +1,14 @@
 import pytest
-from unittest.mock import Mock
-from sqlalchemy.orm import Session
 from uuid import UUID
 
 from app.models.user import User
 from app.utils.security import hash_password
+from tests.repositories.in_memory_user_repository import InMemoryUserRepository
 
 
 @pytest.fixture
-def mock_db_session():
-    return Mock(spec=Session)
+def in_memory_user_repository():
+    return InMemoryUserRepository()
 
 
 @pytest.fixture
