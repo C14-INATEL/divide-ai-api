@@ -74,7 +74,10 @@ cp .env.example .env
 uv run alembic upgrade head
 
 # 4. Rodar o servidor
-uv run python run.py
+python run.py
+
+# 5. Rodar testes
+python -m unittest discover tests -v
 ```
 
 Docs disponíveis em: http://localhost:8000/docs
@@ -85,10 +88,10 @@ Docs disponíveis em: http://localhost:8000/docs
 
 ```bash
 # Rodar todos os testes
-uv run pytest
+python -m unittest discover tests -v
 
-# Com cobertura
-uv run pytest --cov=app
+# Rodar testes de um arquivo específico
+python -m unittest tests.unit.schemas.test_user -v
 ```
 
 ---
