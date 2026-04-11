@@ -77,7 +77,7 @@ uv run alembic upgrade head
 python run.py
 
 # 5. Rodar testes
-pytest -v && python -m unittest discover tests -v
+pytest -v
 ```
 
 Docs disponíveis em: http://localhost:8000/docs
