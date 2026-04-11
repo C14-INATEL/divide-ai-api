@@ -48,7 +48,7 @@ Novos models devem ser registrados em `app/models/__init__.py` para que o Alembi
 | **pydantic-settings** | Leitura de variáveis de ambiente via `.env`                |
 | **Alembic**           | Migrations de banco de dados                               |
 | **bcrypt**            | Hash seguro de senhas                                      |
-| **pytest**            | Testes automatizados                                       |
+| **pytest** e **unittest**           | Testes automatizados                                       |
 
 ---
 
@@ -77,7 +77,7 @@ uv run alembic upgrade head
 python run.py
 
 # 5. Rodar testes
-python -m unittest discover tests -v
+pytest -v && python -m unittest discover tests -v
 ```
 
 Docs disponíveis em: http://localhost:8000/docs
@@ -88,10 +88,15 @@ Docs disponíveis em: http://localhost:8000/docs
 
 ```bash
 # Rodar todos os testes
-python -m unittest discover tests -v
+pytest -v && python -m unittest discover tests -v
 
-# Rodar testes de um arquivo específico
-python -m unittest tests.unit.schemas.test_user -v
+# Rodar testes de um arquivo específico unittest
+python -m unittest discover tests/unit/schemas -v
+
+# Rodar testes de um arquivo específico pytest
+pytest tests/unit/services -v
+
+
 ```
 
 ---
