@@ -88,7 +88,7 @@ Docs disponíveis em: http://localhost:8000/docs
 
 ```bash
 # Rodar todos os testes
-pytest -v && python -m unittest discover tests -v
+pytest -v
 
 # Rodar testes de um arquivo específico unittest
 python -m unittest discover tests/unit/schemas -v
