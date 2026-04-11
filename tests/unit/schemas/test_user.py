@@ -35,3 +35,23 @@ class TestUserSchema(unittest.TestCase):
         with self.assertRaises(ValidationError):
             UserCreate(email='john', name='John', password='aAa!2341aaaaaaaaa')
 
+    def test_name_with_spaces(self):
+        '''
+        É necessário que dê certo quando eu crio um user com um nome com espaços
+        '''
+        user = UserCreate(
+            email='john@gmail.com',
+            name='John Doe Silva',
+            password='AAAabb888AAAAAAAA'
+        )
+        self.assertEqual(user.name, 'John Doe Silva')
+
+    def test_missing_name(self):
+        '''
+        É necessário que dê erro quando eu crio um user sem nome
+        '''    
+        with self.assertRaises(ValidationError):
+            UserCreate(
+                email='john@gmail.com',
+                password='AAAabb888AAAAAAAA'
+            )        
