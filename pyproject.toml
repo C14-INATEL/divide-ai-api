@@ -36,6 +36,10 @@ addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
+    "--cov=app",
+    "--cov-report=term-missing",
+    "--diff-width=60",
+    "--diff-symbols",
 ]
 markers = [
     "unit: Unit tests",
@@ -44,7 +48,17 @@ markers = [
 
 [tool.coverage.run]
 source = ["app"]
-omit = ["tests/*", "migrations/*"]
+omit = [
+    "tests/*",
+    "migrations/*",
+    "*/__init__.py",
+    "app/main.py",
+    "app/database.py",
+    "app/schemas/*",
+    "app/repositories/*",
+    "app/models/*",
+    "app/*.py"
+]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -53,4 +67,11 @@ exclude_lines = [
     "raise AssertionError",
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
+]
+
+[dependency-groups]
+dev = [
+    "pytest-clarity>=1.0.1",
+    "pytest-cov>=7.1.0",
+    "pytest-sugar>=1.1.1",
 ]
