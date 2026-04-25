@@ -1,0 +1,100 @@
+import uuid
+from sqlalchemy.orm import Session
+from app.repositories.group_repository import GroupRepository
+from app.repositories.user_repository import UserRepository
+from app.schemas.group import GroupCreate, GroupUpdate
+from app.models.group import Group
+from app.models.group_member import GroupMember
+from app.exceptions import AppException
+
+
+class GroupService:
+    def __init__(self, db: Session):
+        self.repo = GroupRepository(db)
+        self.user_repo = UserRepository(db)
+
+    def create(self, data: GroupCreate, creator_id: uuid.UUID) -> Group:
+        group = self.repo.create(name=data.name, creator_id=creator_id)
+        self.repo.add_member(group_id=group.id, user_id=creator_id)
+        return group
+
+    def get_by_id(self, group_id: uuid.UUID, current_user_id: uuid.UUID) -> Group:
+        group = self.repo.get_by_id(group_id)
+        if not group:
+            raise AppException(status_code=404, detail="Grupo não encontrado")
+        member = self.repo.get_member(group_id, current_user_id)
+        if not member:
+            raise AppException(status_code=403, detail="Você não é membro deste grupo")
+        return group
+
+    def list_by_user(self, user_id: uuid.UUID) -> list[Group]:
+        return self.repo.get_groups_by_user(user_id)
+
+    def update(
+        self, group_id: uuid.UUID, data: GroupUpdate, current_user_id: uuid.UUID
+    ) -> Group:
+        group = self.repo.get_by_id(group_id)
+        if not group:
+            raise AppException(status_code=404, detail="Grupo não encontrado")
+        if group.creator_id != current_user_id:
+            raise AppException(
+                status_code=403, detail="Apenas o criador pode editar o grupo"
+            )
+        if data.name is not None:
+            group.name = data.name
+        return self.repo.update(group)
+
+    def delete(self, group_id: uuid.UUID, current_user_id: uuid.UUID) -> None:
+        group = self.repo.get_by_id(group_id)
+        if not group:
+            raise AppException(status_code=404, detail="Grupo não encontrado")
+        if group.creator_id != current_user_id:
+            raise AppException(
+                status_code=403, detail="Apenas o criador pode excluir o grupo"
+            )
+        self.repo.delete(group)
+
+    def add_member(
+        self,
+        group_id: uuid.UUID,
+        user_id_to_add: uuid.UUID,
+        current_user_id: uuid.UUID,
+    ) -> GroupMember:
+        group = self.repo.get_by_id(group_id)
+        if not group:
+            raise AppException(status_code=404, detail="Grupo não encontrado")
+        if group.creator_id != current_user_id:
+            raise AppException(
+                status_code=403, detail="Apenas o criador pode adicionar membros"
+            )
+        user = self.user_repo.get_by_id(user_id_to_add)
+        if not user:
+            raise AppException(status_code=404, detail="Usuário não encontrado")
+        existing = self.repo.get_member(group_id, user_id_to_add)
+        if existing:
+            raise AppException(status_code=400, detail="Usuário já é membro do grupo")
+        return self.repo.add_member(group_id=group_id, user_id=user_id_to_add)
+
+    def remove_member(
+        self,
+        group_id: uuid.UUID,
+        user_id_to_remove: uuid.UUID,
+        current_user_id: uuid.UUID,
+    ) -> None:
+        group = self.repo.get_by_id(group_id)
+        if not group:
+            raise AppException(status_code=404, detail="Grupo não encontrado")
+        if group.creator_id != current_user_id:
+            raise AppException(
+                status_code=403, detail="Apenas o criador pode remover membros"
+            )
+        if user_id_to_remove == group.creator_id:
+            raise AppException(
+                status_code=400, detail="Não é possível remover o criador do grupo"
+            )
+        member = self.repo.get_member(group_id, user_id_to_remove)
+        if not member:
+            raise AppException(
+                status_code=404, detail="Usuário não é membro deste grupo"
+            )
+        self.repo.remove_member(member)

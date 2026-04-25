@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import Mock
 from sqlalchemy.orm import Session
 from uuid import UUID
 
@@ -7,9 +6,14 @@ from app.models.user import User
 from app.utils.security import hash_password
 
 
+CREATOR_ID = UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
+OTHER_USER_ID = UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
+GROUP_ID = UUID("cccccccc-cccc-cccc-cccc-cccccccccccc")
+
+
 @pytest.fixture
-def mock_db_session():
-    return Mock(spec=Session)
+def mock_db_session(mocker):
+    return mocker.Mock(spec=Session)
 
 
 @pytest.fixture
@@ -28,3 +32,12 @@ def sample_user():
 @pytest.fixture
 def sample_user_plain_password():
     return "TestPassword123"
+
+@pytest.fixture
+def mock_group_repo(mocker):
+    return mocker.Mock()
+
+
+@pytest.fixture
+def mock_user_repo(mocker):
+    return mocker.Mock()

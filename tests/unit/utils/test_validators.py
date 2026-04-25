@@ -1,6 +1,6 @@
 import unittest
 
-from app.utils.validators import validate_password_strength
+from app.validators.user_validators import validate_password_strength
 
 
 class TestValidators(unittest.TestCase):
