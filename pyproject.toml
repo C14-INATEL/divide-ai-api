@@ -17,8 +17,10 @@ dev = [
     "pytest",
     "pytest-asyncio",
     "pytest-mock",
-    "pytest-cov",
+    "pytest-cov>=7.1.0",
     "httpx",
+    "pytest-clarity>=1.0.1",
+    "pytest-sugar>=1.1.1",
 ]
 
 [build-system]
@@ -56,8 +58,7 @@ omit = [
     "app/database.py",
     "app/schemas/*",
     "app/repositories/*",
-    "app/models/*",
-    "app/*.py"
+    "app/models/*"
 ]
 
 [tool.coverage.report]
@@ -67,11 +68,4 @@ exclude_lines = [
     "raise AssertionError",
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
-]
-
-[dependency-groups]
-dev = [
-    "pytest-clarity>=1.0.1",
-    "pytest-cov>=7.1.0",
-    "pytest-sugar>=1.1.1",
 ]
