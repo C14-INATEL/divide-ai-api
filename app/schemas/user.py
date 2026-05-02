@@ -2,7 +2,7 @@ from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel, EmailStr, field_validator
 from app.models.enums.pix_key_type import PixKeyType
-from app.utils.validators import validate_password_strength, validate_pix_key, validate_name
+from app.validators.user_validators import validate_password_strength, validate_pix_key, validate_name
 
 class UserCreate(BaseModel):
     email: EmailStr

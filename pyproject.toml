@@ -17,8 +17,10 @@ dev = [
     "pytest",
     "pytest-asyncio",
     "pytest-mock",
-    "pytest-cov",
+    "pytest-cov>=7.1.0",
     "httpx",
+    "pytest-clarity>=1.0.1",
+    "pytest-sugar>=1.1.1",
 ]
 
 [build-system]
@@ -36,6 +38,10 @@ addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
+    "--cov=app",
+    "--cov-report=term-missing",
+    "--diff-width=60",
+    "--diff-symbols",
 ]
 markers = [
     "unit: Unit tests",
@@ -44,7 +50,16 @@ markers = [
 
 [tool.coverage.run]
 source = ["app"]
-omit = ["tests/*", "migrations/*"]
+omit = [
+    "tests/*",
+    "migrations/*",
+    "*/__init__.py",
+    "app/main.py",
+    "app/database.py",
+    "app/schemas/*",
+    "app/repositories/*",
+    "app/models/*"
+]
 
 [tool.coverage.report]
 exclude_lines = [
