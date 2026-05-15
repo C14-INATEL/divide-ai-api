@@ -274,14 +274,9 @@ dev = [
     { name = "httpx" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "pytest-mock" },
-]
-
-[package.dev-dependencies]
-dev = [
     { name = "pytest-clarity" },
     { name = "pytest-cov" },
+    { name = "pytest-mock" },
     { name = "pytest-sugar" },
 ]
 
@@ -295,18 +290,13 @@ requires-dist = [
     { name = "pyjwt" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pytest-asyncio", marker = "extra == 'dev'" },
-    { name = "pytest-cov", marker = "extra == 'dev'" },
+    { name = "pytest-clarity", marker = "extra == 'dev'", specifier = ">=1.0.1" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.1.0" },
     { name = "pytest-mock", marker = "extra == 'dev'" },
+    { name = "pytest-sugar", marker = "extra == 'dev'", specifier = ">=1.1.1" },
     { name = "sqlalchemy", specifier = ">=2.0" },
 ]
 provides-extras = ["dev"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest-clarity", specifier = ">=1.0.1" },
-    { name = "pytest-cov", specifier = ">=7.1.0" },
-    { name = "pytest-sugar", specifier = ">=1.1.1" },
-]
 
 [[package]]
 name = "dnspython"
