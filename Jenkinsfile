@@ -1,37 +1,29 @@
 pipeline {
-    agent any 
+    agent any
+
+    triggers {
+        pollSCM('* * * * *')
+    }
 
     stages {
-        stage('Checkout do Código') {
+        stage('Checkout') {
             steps {
-                // Puxa o código da branch que acionou o gatilho
-                checkout scm 
+                checkout scm
             }
         }
 
-        stage('Build: Setup e Dependências') {
+        stage('Build') {
             steps {
-                // Cria o ambiente e resolve as dependências do pyproject.toml
-                sh '''
-                python3 -m venv venv
-                . venv/bin/activate
-                pip install --upgrade pip
-                pip install .  
-                '''
+                script {
+                    docker.build("api-backend:${env.BUILD_ID}")
+                }
             }
         }
     }
-
-    // Feedback visual do resultado
+    
     post { 
-        always {
-            cleanWs() // Limpa o workspace para a próxima execução não herdar lixo
-        }
-        success {
-            echo 'Build finalizado com sucesso! O ambiente foi montado sem erros.'
-        }
-        failure {
-            echo 'Erro no Build! Verifique se há conflito nas dependências.'
+        always { 
+            cleanWs() 
         }
     }
 }
