@@ -2,7 +2,7 @@
 name = "DivideAi"
 version = "0.1.0"
 description = "Sistema para controle de dívidas em grupos, podendo compartilhar, escolher participantes, abater divídas e facilitar pagamentos e confirmações"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
     "fastapi[standard]",
     "sqlalchemy>=2.0",
