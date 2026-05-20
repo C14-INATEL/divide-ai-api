@@ -61,6 +61,12 @@ As dependências são gerenciadas via `pyproject.toml` (PEP 621).
 
 ---
 
+## CI/CD
+
+Veja [`pipeline_instructions.md`](pipeline_instructions.md) para orientações sobre a construção do pipeline.
+
+---
+
 ## Como rodar
 
 ```bash
