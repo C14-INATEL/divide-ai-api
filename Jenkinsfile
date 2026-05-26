@@ -1,29 +1,39 @@
 pipeline {
+
     agent any
 
-    triggers {
-        pollSCM('* * * * *')
-    }
-
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Build') {
+        stage('Build Maven') {
             steps {
-                script {
-                    docker.build("api-backend:${env.BUILD_ID}")
-                }
+                sh 'mvn clean package -DskipTests'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                    docker rmi api-backend:latest || true
+                    docker build -t api-backend:latest .
+                '''
             }
         }
     }
-    
-    post { 
-        always { 
-            cleanWs() 
+
+    post {
+
+        success {
+            echo 'Build concluído com sucesso!'
+        }
+
+        failure {
+            echo 'Build falhou!'
         }
     }
 }
