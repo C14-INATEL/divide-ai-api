@@ -22,6 +22,16 @@ pipeline {
                 }
             }
         }
+        
+        stage('Unit Tests') {
+            steps {
+                script {
+                    docker.image("api-backend:${env.BUILD_ID}").inside {
+                        sh 'python -m pytest tests/ -v --tb=short'
+                    }
+                }
+            }
+        }
     }
 
     post {
