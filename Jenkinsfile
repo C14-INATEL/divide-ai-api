@@ -25,7 +25,9 @@ pipeline {
     }
 
     post {
-
+        always {
+            cleanWs()
+        }
         success {
             echo 'Build concluído com sucesso!'
         }
