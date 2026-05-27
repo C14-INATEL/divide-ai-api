@@ -1,32 +1,136 @@
-### Guia de Configuração Local: CI/CD com Jenkins e Docker
+# Jenkins + Docker (Setup Local)
 
-Este guia descreve os passos para replicar o ambiente de integração contínua. A infraestrutura baseia-se no `Dockerfile` e no `Jenkinsfile` presentes no repositório.
+## 1. Clonar o projeto
 
-**1. Iniciar o Servidor Jenkins**
-Execute o comando no terminal para iniciar o Jenkins com acesso ao Docker local:
-`docker run -d -p 8080:8080 -p 50000:50000 -v jenkins_home:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock -u root --name jenkins-api jenkins/jenkins:lts`
+```bash
+git clone https://github.com/C14-INATEL/divide-ai-api.git
+cd divide-ai-api
+```
 
-**2. Instalar o Docker no Jenkins**
-Execute os comandos sequenciais para instalar o cliente Docker dentro do contentor:
-`docker exec -it jenkins-api apt-get update`
-`docker exec -it jenkins-api apt-get install -y docker.io`
+---
 
-**3. Obter a Palavra-passe Inicial**
-Recupere a palavra-passe de administrador:
-`docker exec -it jenkins-api cat /var/jenkins_home/secrets/initialAdminPassword`
+## 2. Subir Jenkins
 
-**4. Configurar a Interface Web**
-1. Aceda a http://localhost:8080 e insira a palavra-passe.
-2. Instale os plugins sugeridos e crie o utilizador.
-3. Navegue até Gerir Jenkins > Plugins > Available plugins.
-4. Instale o plugin "Docker Pipeline" e reinicie o Jenkins.
+```bash
+docker compose -f docker-compose.jenkins.yml up -d --build
+```
 
-**5. Criar e Configurar o Pipeline**
-1. Clique em Nova Tarefa, insira um nome, selecione Pipeline e clique em OK.
-2. Em Build Triggers, marque Poll SCM e insira * * * * *
-3. Em Pipeline, altere o Definition para Pipeline script from SCM.
-4. Selecione Git e insira o URL do repositório.
-5. Defina o Branch Specifier como */main e guarde.
+---
 
-**6. Ativar a Automação**
-Clique em Construir agora (Build Now) na tarefa criada. Esta primeira execução manual é obrigatória para ler o Jenkinsfile e ativar o rastreio automático de novos commits.
+## 3. Abrir Jenkins
+
+Acessar:
+
+```txt
+http://localhost:8080
+```
+
+---
+
+## 4. Pegar senha inicial
+
+Ver containers:
+
+```bash
+docker ps
+```
+
+Ver logs do Jenkins:
+
+```bash
+docker logs NOME_DO_CONTAINER
+```
+
+Copiar a senha exibida no log.
+
+---
+
+## 5. Configurar Jenkins
+
+- Install Suggested Plugins
+- Criar usuário admin
+
+---
+
+## 6. Criar pipeline
+
+- New Item
+- Pipeline
+- Pipeline script from SCM
+- Git
+
+URL:
+
+```txt
+https://github.com/C14-INATEL/divide-ai-api.git
+```
+
+Branch:
+
+```txt
+*/develop
+```
+
+Salvar.
+
+---
+
+## 7. Rodar pipeline
+
+```txt
+Build Now
+```
+
+O Jenkins irá:
+
+- clonar o projeto
+- executar o Jenkinsfile
+- buildar o container Docker
+
+---
+
+## Comandos úteis
+
+### Parar Jenkins
+
+```bash
+docker compose -f docker-compose.jenkins.yml down
+```
+
+### Rebuildar Jenkins
+
+Usar apenas se mudar:
+
+- plugins.txt
+- jenkins/Dockerfile
+- docker-compose.jenkins.yml
+
+```bash
+docker compose -f docker-compose.jenkins.yml up -d --build
+```
+
+---
+
+## Fluxo normal
+
+Após configurado:
+
+```bash
+git push
+```
+
+Depois executar novamente:
+
+```txt
+Build Now
+```
+
+---
+
+## Futuras melhorias
+
+- Webhook GitHub
+- Deploy automático
+- Jenkins hospedado em servidor
+- DockerHub
+- Testes automatizados
