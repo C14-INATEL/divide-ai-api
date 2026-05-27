@@ -22,7 +22,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("api-backend:${env.BUILD_ID}")
+                    docker.build("api-backend:${env.BUILD_ID}", "--target dev .")
                 }
             }
         }
