@@ -17,10 +17,9 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                    docker rmi api-backend:latest || true
-                    docker build -t api-backend:latest .
-                '''
+                script {
+                    def img = docker.build("api-backend:${env.BUILD_ID}")
+                }
             }
         }
     }
