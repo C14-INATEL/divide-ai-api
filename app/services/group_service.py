@@ -6,12 +6,16 @@ from app.schemas.group import GroupCreate, GroupUpdate
 from app.models.group import Group
 from app.models.group_member import GroupMember
 from app.exceptions import AppException
+from app.models.debt_participant import DebtParticipant
+from app.models.debt import Debt
+from sqlalchemy import and_
 
 
 class GroupService:
     def __init__(self, db: Session):
         self.repo = GroupRepository(db)
         self.user_repo = UserRepository(db)
+        self.db = db
 
     def create(self, data: GroupCreate, creator_id: uuid.UUID) -> Group:
         group = self.repo.create(name=data.name, creator_id=creator_id)
@@ -97,4 +101,30 @@ class GroupService:
             raise AppException(
                 status_code=404, detail="Usuário não é membro deste grupo"
             )
+        # check if user has pending or paid (but not confirmed) debts in this group
+        pending = (
+            self.db.query(DebtParticipant)
+            .join(Debt, Debt.id == DebtParticipant.debt_id)
+            .filter(
+                DebtParticipant.user_id == user_id_to_remove,
+                Debt.group_id == group_id,
+                DebtParticipant.status.in_(["pendente", "pago"]),
+            )
+            .all()
+        )
+        debt_ids = []
+        try:
+            debt_ids = [str(p.debt_id) for p in pending]
+        except TypeError:
+            debt_ids = []
+
+        if debt_ids:
+            raise AppException(
+                status_code=422,
+                detail=(
+                    "Usuário possui pagamentos em aberto; remova/certeifique as dívidas: "
+                    + ", ".join(debt_ids)
+                ),
+            )
+
         self.repo.remove_member(member)

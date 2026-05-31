@@ -18,9 +18,10 @@ class DebtCreate(BaseModel):
     group_id: uuid.UUID
     title: str
     description: Optional[str] = None
+    due_date: Optional[datetime] = None
     total_amount: Decimal
     split_type: DebtSplitType
-    participants: list[DebtParticipantInput]
+    participants: list[DebtParticipantInput] = []
 
 
 class DebtParticipantOut(BaseModel):
@@ -42,8 +43,10 @@ class DebtResponse(BaseModel):
     creator_id: uuid.UUID
     title: str
     description: Optional[str] = None
+    due_date: Optional[datetime] = None
     total_amount: Decimal
     split_type: DebtSplitType
+    status: str
     created_at: datetime
     updated_at: datetime
     participants: list[DebtParticipantOut] = []
@@ -58,6 +61,7 @@ class DebtSummary(BaseModel):
     title: str
     total_amount: Decimal
     split_type: DebtSplitType
+    status: str
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
