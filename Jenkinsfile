@@ -67,26 +67,6 @@ pipeline {
                 }
             }
         }
-        
-        stage('Migrations') {
-            when {
-                branch 'main'
-            }
-            steps {
-                script {
-                    echo 'Running alembic migrations...'
-                    docker.image("api-backend:${env.BUILD_ID}").inside {
-                        sh '''
-                            if [ -z "${DATABASE_URL}" ]; then
-                                echo "DATABASE_URL is not set. Aborting migrations."
-                                exit 1
-                            fi
-                            python -m alembic upgrade head
-                        '''
-                    }
-                }
-            }
-        }
     }
 
     post {
