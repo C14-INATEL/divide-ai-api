@@ -69,7 +69,7 @@ pipeline {
                         echo "Deploying to Render..."
 
                         RESPONSE=$(curl -s -w "\n%{http_code}" \
-                            -X POST "https://api.render.com/deploy/${RENDER_SERVICE_ID}" \
+                            -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
                             -H "accept: application/json" \
                             -H "authorization: Bearer ${RENDER_API_KEY}")
 
