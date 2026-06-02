@@ -39,7 +39,9 @@ pipeline {
 
         stage('Database Migrations') {
             when {
-                branch 'main'
+                expression {
+                    env.GIT_BRANCH == 'main' || env.GIT_BRANCH == 'origin/main'
+                }
             }
             steps {
                 script {
@@ -56,7 +58,9 @@ pipeline {
 
         stage('Deploy to Render') {
             when {
-                branch 'main'
+                expression {
+                    env.GIT_BRANCH == 'main' || env.GIT_BRANCH == 'origin/main'
+                }
             }
             steps {
                 script {
