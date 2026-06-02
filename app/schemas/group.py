@@ -7,6 +7,8 @@ from app.validators.group_validators import validate_group_name, validate_group_
 
 class GroupCreate(BaseModel):
     name: str
+    description: Optional[str] = None
+    added_users: list[uuid.UUID] = []
 
     @field_validator("name")
     @classmethod
@@ -16,6 +18,7 @@ class GroupCreate(BaseModel):
 
 class GroupUpdate(BaseModel):
     name: Optional[str] = None
+    description: Optional[str] = None
 
     @field_validator("name")
     @classmethod
@@ -42,7 +45,9 @@ class GroupMemberDetail(BaseModel):
 class GroupResponse(BaseModel):
     id: uuid.UUID
     name: str
+    description: Optional[str] = None
     creator_id: uuid.UUID
+    is_owner: bool = False
     created_at: datetime
     updated_at: datetime
     members: list[GroupMemberDetail] = []

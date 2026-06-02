@@ -4,6 +4,8 @@ services:
 
   jenkins:
     build: ./jenkins
+    
+    privileged: true
 
     user: root
 

@@ -8,8 +8,10 @@ class GroupRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, name: str, creator_id: uuid.UUID) -> Group:
-        group = Group(name=name, creator_id=creator_id)
+    def create(
+        self, name: str, creator_id: uuid.UUID, description: str | None = None
+    ) -> Group:
+        group = Group(name=name, creator_id=creator_id, description=description)
         self.db.add(group)
         self.db.flush()
         self.db.refresh(group)
