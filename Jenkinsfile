@@ -37,6 +37,23 @@ pipeline {
             }
         }
 
+        stage('Database Migrations') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    docker.image("api-backend:${env.BUILD_ID}").inside {
+                        sh '''
+                            echo "Running database migrations..."
+                            python -m alembic upgrade head
+                            echo "Migrations completed successfully!"
+                        '''
+                    }
+                }
+            }
+        }
+
         stage('Deploy to Render') {
             when {
                 branch 'main'
