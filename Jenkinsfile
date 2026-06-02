@@ -5,6 +5,7 @@ pipeline {
     environment {
         RENDER_API_KEY    = credentials('RENDER_API_KEY')
         RENDER_SERVICE_ID = credentials('RENDER_SERVICE_ID')
+        DATABASE_URL      = credentials('DATABASE_URL')
     }
 
     triggers {
@@ -45,7 +46,7 @@ pipeline {
             }
             steps {
                 script {
-                    docker.image("api-backend:${env.BUILD_ID}").inside {
+                    docker.image("api-backend:${env.BUILD_ID}").inside("-e DATABASE_URL=${env.DATABASE_URL}") {
                         sh '''
                             echo "Running database migrations..."
                             python -m alembic upgrade head
