@@ -37,9 +37,30 @@ pipeline {
             }
         }
 
+        stage('Database Migrations') {
+            when {
+                expression {
+                    env.GIT_BRANCH == 'main' || env.GIT_BRANCH == 'origin/main'
+                }
+            }
+            steps {
+                script {
+                    docker.image("api-backend:${env.BUILD_ID}").inside {
+                        sh '''
+                            echo "Running database migrations..."
+                            python -m alembic upgrade head
+                            echo "Migrations completed successfully!"
+                        '''
+                    }
+                }
+            }
+        }
+
         stage('Deploy to Render') {
             when {
-                branch 'main'
+                expression {
+                    env.GIT_BRANCH == 'main' || env.GIT_BRANCH == 'origin/main'
+                }
             }
             steps {
                 script {
