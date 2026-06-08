@@ -31,8 +31,15 @@ pipeline {
             steps {
                 script {
                     docker.image("api-backend:${env.BUILD_ID}").inside {
-                        sh 'python -m pytest tests/ -v --tb=short'
+                        sh 'mkdir -p reports'
+                        sh 'python -m pytest tests/ --junit-xml=reports/test-results.xml --cov-report=xml:reports/coverage.xml'
                     }
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'reports/test-results.xml'
+                    archiveArtifacts artifacts: 'reports/coverage.xml', allowEmptyArchive: true
                 }
             }
         }
