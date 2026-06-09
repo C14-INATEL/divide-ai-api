@@ -32,6 +32,11 @@ class DebtRepository:
             .first()
         )
 
+    def update(self, debt: Debt) -> Debt:
+        self.db.commit()
+        self.db.refresh(debt)
+        return debt
+
     def delete(self, debt: Debt) -> None:
         self.db.delete(debt)
         self.db.commit()

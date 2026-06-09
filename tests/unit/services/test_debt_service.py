@@ -12,7 +12,7 @@ from app.models.enums.participant_status import ParticipantStatus
 from app.models.group_member import GroupMember
 from app.repositories.debt_repository import DebtRepository
 from app.repositories.group_repository import GroupRepository
-from app.schemas.debt import DebtCreate, DebtParticipantInput
+from app.schemas.debt import DebtCreate, DebtParticipantInput, DebtUpdate
 from app.services.debt_service import DebtService
 from tests.conftest import CREATOR_ID, OTHER_USER_ID, GROUP_ID
 
@@ -320,6 +320,107 @@ class TestDebtServiceGetById:
         result = service.get_by_id(DEBT_ID, current_user_id=CREATOR_ID)
 
         assert result is debt
+
+
+class TestDebtServiceUpdate:
+
+    def test_update_debt_not_found(self, mock_db_session, mock_group_repo, mock_debt_repo):
+        mock_debt_repo.get_by_id.return_value = None
+
+        service = _make_service(mock_db_session, mock_group_repo, mock_debt_repo)
+
+        with pytest.raises(AppException) as exc:
+            service.update(DEBT_ID, DebtUpdate(title="new"), current_user_id=CREATOR_ID)
+
+        assert exc.value.status_code == 404
+
+    def test_update_not_creator(self, mock_db_session, mock_group_repo, mock_debt_repo):
+        mock_debt_repo.get_by_id.return_value = _make_debt(creator_id=CREATOR_ID)
+
+        service = _make_service(mock_db_session, mock_group_repo, mock_debt_repo)
+
+        with pytest.raises(AppException) as exc:
+            service.update(DEBT_ID, DebtUpdate(title="new"), current_user_id=OTHER_USER_ID)
+
+        assert exc.value.status_code == 403
+
+    def test_update_non_monetary_allowed_even_when_paid(
+        self, mock_db_session, mock_group_repo, mock_debt_repo
+    ):
+        debt = _make_debt(creator_id=CREATOR_ID)
+        debt.participants = [_make_participant(status=ParticipantStatus.PAGO.value)]
+        mock_debt_repo.get_by_id.return_value = debt
+        mock_debt_repo.update.return_value = debt
+
+        service = _make_service(mock_db_session, mock_group_repo, mock_debt_repo)
+        result = service.update(
+            DEBT_ID, DebtUpdate(title="updated title"), current_user_id=CREATOR_ID
+        )
+
+        assert result.title == "updated title"
+        mock_debt_repo.update.assert_called_once_with(debt)
+
+    def test_update_monetary_blocked_when_participant_not_pendente(
+        self, mock_db_session, mock_group_repo, mock_debt_repo
+    ):
+        debt = _make_debt(creator_id=CREATOR_ID)
+        debt.participants = [_make_participant(status=ParticipantStatus.PAGO.value)]
+        mock_debt_repo.get_by_id.return_value = debt
+
+        service = _make_service(mock_db_session, mock_group_repo, mock_debt_repo)
+
+        with pytest.raises(AppException) as exc:
+            service.update(
+                DEBT_ID, DebtUpdate(total_amount=Decimal("50.00")), current_user_id=CREATOR_ID
+            )
+
+        assert exc.value.status_code == 422
+
+    def test_update_monetary_success_all_pendente(
+        self, mock_db_session, mock_group_repo, mock_debt_repo
+    ):
+        debt = _make_debt(creator_id=CREATOR_ID)
+        debt.participants = [_make_participant(status=ParticipantStatus.PENDENTE.value)]
+        mock_debt_repo.get_by_id.return_value = debt
+        mock_debt_repo.update.return_value = debt
+        mock_group_repo.get_member.return_value = _make_member()
+
+        service = _make_service(mock_db_session, mock_group_repo, mock_debt_repo)
+        result = service.update(
+            DEBT_ID,
+            DebtUpdate(
+                total_amount=Decimal("200.00"),
+                participants=[DebtParticipantInput(user_id=OTHER_USER_ID)],
+            ),
+            current_user_id=CREATOR_ID,
+        )
+
+        assert result.total_amount == Decimal("200.00")
+        assert len(result.participants) == 1
+        assert result.participants[0].amount == Decimal("200.00")
+        mock_debt_repo.update.assert_called_once_with(debt)
+
+    def test_update_heterogenea_missing_percentage(
+        self, mock_db_session, mock_group_repo, mock_debt_repo
+    ):
+        debt = _make_debt(creator_id=CREATOR_ID)
+        debt.participants = [_make_participant(status=ParticipantStatus.PENDENTE.value)]
+        mock_debt_repo.get_by_id.return_value = debt
+        mock_group_repo.get_member.return_value = _make_member()
+
+        service = _make_service(mock_db_session, mock_group_repo, mock_debt_repo)
+
+        with pytest.raises(AppException) as exc:
+            service.update(
+                DEBT_ID,
+                DebtUpdate(
+                    split_type=DebtSplitType.HETEROGENEA,
+                    participants=[DebtParticipantInput(user_id=OTHER_USER_ID, percentage=None)],
+                ),
+                current_user_id=CREATOR_ID,
+            )
+
+        assert exc.value.status_code == 422
 
 
 class TestDebtServiceDelete:

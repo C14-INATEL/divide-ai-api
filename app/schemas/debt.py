@@ -24,6 +24,15 @@ class DebtCreate(BaseModel):
     participants: list[DebtParticipantInput] = []
 
 
+class DebtUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    due_date: Optional[datetime] = None
+    total_amount: Optional[Decimal] = None
+    split_type: Optional[DebtSplitType] = None
+    participants: Optional[list[DebtParticipantInput]] = None
+
+
 class DebtParticipantOut(BaseModel):
     user_id: uuid.UUID
     user: UserInGroupOut
