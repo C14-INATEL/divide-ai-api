@@ -24,6 +24,12 @@ pipeline {
             steps {
                 script {
                     docker.build("api-backend:${env.BUILD_ID}", "--target dev .")
+                    sh 'mkdir -p artifacts && docker save api-backend:${BUILD_ID} > artifacts/api-backend-${BUILD_ID}.tar'
+                }
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'artifacts/api-backend-*.tar', allowEmptyArchive: true
                 }
             }
         }

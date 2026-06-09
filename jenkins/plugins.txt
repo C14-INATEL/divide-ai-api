@@ -4,3 +4,4 @@ github
 docker-workflow
 pipeline-stage-view
 configuration-as-code
+junit
