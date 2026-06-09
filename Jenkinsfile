@@ -24,6 +24,12 @@ pipeline {
             steps {
                 script {
                     docker.build("api-backend:${env.BUILD_ID}", "--target dev .")
+                    sh 'mkdir -p artifacts && docker save api-backend:${BUILD_ID} > artifacts/api-backend-${BUILD_ID}.tar'
+                }
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'artifacts/api-backend-*.tar', allowEmptyArchive: true
                 }
             }
         }
@@ -32,8 +38,15 @@ pipeline {
             steps {
                 script {
                     docker.image("api-backend:${env.BUILD_ID}").inside {
-                        sh 'python -m pytest tests/ -v --tb=short'
+                        sh 'mkdir -p reports'
+                        sh 'python -m pytest tests/ --junit-xml=reports/test-results.xml --cov-report=xml:reports/coverage.xml'
                     }
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'reports/test-results.xml'
+                    archiveArtifacts artifacts: 'reports/test-results.xml', allowEmptyArchive: true
                 }
             }
         }
