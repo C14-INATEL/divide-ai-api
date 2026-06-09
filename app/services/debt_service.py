@@ -6,7 +6,7 @@ from fastapi import UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from app.schemas.debt import DebtCreate
+from app.schemas.debt import DebtCreate, DebtUpdate
 from app.repositories.group_repository import GroupRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.debt_repository import DebtRepository
@@ -29,31 +29,19 @@ class DebtService:
         if not member:
             raise AppException(403, "user is not a member of the group")
 
-    def create(self, data: DebtCreate, creator_id: uuid.UUID):
-        group = self.group_repo.get_by_id(data.group_id)
-        if not group:
-            raise AppException(404, "group not found")
-
-        # creator must be member
-        self._assert_member(data.group_id, creator_id)
-
-        total = Decimal(data.total_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
-        participants_input = data.participants or []
-        # if no participants provided, use all group members
-        if len(participants_input) == 0:
-            # include all members of the group except the creator
-            participants_input = []
-            for member in group.members:
-                if member.user.id == creator_id:
-                    continue
-                participants_input.append(type("P", (), {"user_id": member.user.id, "percentage": None})())
+    def _compute_participants(
+        self,
+        group_id: uuid.UUID,
+        total: Decimal,
+        split_type: DebtSplitType,
+        participants_input: list,
+    ) -> list[DebtParticipant]:
         n = len(participants_input)
         if n == 0:
             raise AppException(422, "must have at least one participant")
 
         percentages: list[Decimal] = []
-        if data.split_type == DebtSplitType.HOMOGENEA:
+        if split_type == DebtSplitType.HOMOGENEA:
             # compute base percentage and distribute rounding remainder to the first participant
             base = (Decimal("100") / Decimal(n))
             per = base.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -71,7 +59,7 @@ class DebtService:
 
         # verify participants are group members
         for p in participants_input:
-            member = self.group_repo.get_member(data.group_id, p.user_id)
+            member = self.group_repo.get_member(group_id, p.user_id)
             if not member:
                 raise AppException(422, f"user {p.user_id} is not a member of the group")
 
@@ -92,6 +80,43 @@ class DebtService:
         if diff != Decimal("0.00"):
             amounts[0] = (amounts[0] + diff).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
+        part_objs: list[DebtParticipant] = []
+        for inp, pct, amt in zip(participants_input, percentages, amounts):
+            part = DebtParticipant(
+                user_id=inp.user_id,
+                percentage=pct,
+                amount=amt,
+                status=ParticipantStatus.PENDENTE.value,
+                has_proof=False,
+            )
+            part_objs.append(part)
+
+        return part_objs
+
+    def create(self, data: DebtCreate, creator_id: uuid.UUID):
+        group = self.group_repo.get_by_id(data.group_id)
+        if not group:
+            raise AppException(404, "group not found")
+
+        # creator must be member
+        self._assert_member(data.group_id, creator_id)
+
+        total = Decimal(data.total_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+        participants_input = data.participants or []
+        # if no participants provided, use all group members
+        if len(participants_input) == 0:
+            # include all members of the group except the creator
+            participants_input = []
+            for member in group.members:
+                if member.user.id == creator_id:
+                    continue
+                participants_input.append(type("P", (), {"user_id": member.user.id, "percentage": None})())
+
+        part_objs = self._compute_participants(
+            data.group_id, total, data.split_type, participants_input
+        )
+
         # create debt and participants
         debt = Debt(
             group_id=data.group_id,
@@ -103,17 +128,6 @@ class DebtService:
             due_date=data.due_date,
             status="pendente",
         )
-
-        part_objs: list[DebtParticipant] = []
-        for inp, pct, amt in zip(participants_input, percentages, amounts):
-            part = DebtParticipant(
-                user_id=inp.user_id,
-                percentage=pct,
-                amount=amt,
-                status=ParticipantStatus.PENDENTE.value,
-                has_proof=False,
-            )
-            part_objs.append(part)
 
         debt.participants = part_objs
 
@@ -133,6 +147,56 @@ class DebtService:
             raise AppException(404, "debt not found")
         self._assert_member(debt.group_id, current_user_id)
         return debt
+
+    def update(self, debt_id: uuid.UUID, data: DebtUpdate, current_user_id: uuid.UUID) -> Debt:
+        debt = self.debt_repo.get_by_id(debt_id)
+        if not debt:
+            raise AppException(404, "debt not found")
+        if debt.creator_id != current_user_id:
+            raise AppException(403, "only creator can edit the debt")
+
+        monetary_fields = {"total_amount", "split_type", "participants"}
+        monetary_change = bool(monetary_fields & data.model_fields_set)
+
+        if monetary_change:
+            # monetary fields can only change while every participant is still pendente
+            if any(p.status != ParticipantStatus.PENDENTE.value for p in debt.participants):
+                raise AppException(
+                    422,
+                    "cannot edit monetary fields after a participant has paid or confirmed",
+                )
+
+            effective_total = (
+                Decimal(data.total_amount) if data.total_amount is not None else debt.total_amount
+            ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            effective_split = (
+                data.split_type if data.split_type is not None else DebtSplitType(debt.split_type)
+            )
+            # use provided participants, else derive input from the existing ones
+            if data.participants is not None:
+                participants_input = data.participants
+            else:
+                participants_input = [
+                    type("P", (), {"user_id": p.user_id, "percentage": p.percentage})()
+                    for p in debt.participants
+                ]
+
+            new_parts = self._compute_participants(
+                debt.group_id, effective_total, effective_split, participants_input
+            )
+            debt.total_amount = effective_total
+            debt.split_type = effective_split.value
+            debt.participants = new_parts  # cascade="all, delete-orphan" replaces old rows
+
+        # non-monetary fields (always allowed)
+        if data.title is not None:
+            debt.title = data.title
+        if data.description is not None:
+            debt.description = data.description
+        if data.due_date is not None:
+            debt.due_date = datetime.fromisoformat(data.due_date.isoformat()) if isinstance(data.due_date, datetime) else data.due_date
+
+        return self.debt_repo.update(debt)
 
     def delete(self, debt_id: uuid.UUID, current_user_id: uuid.UUID) -> None:
         debt = self.debt_repo.get_by_id(debt_id)
