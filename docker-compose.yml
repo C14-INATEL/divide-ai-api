@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+
+  jenkins:
+    build: ./jenkins
+    
+    privileged: true
+
+    user: root
+
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+
+    environment:
+      CASC_JENKINS_CONFIG: /var/jenkins_home/casc.yml
+      DATABASE_URL: ${DATABASE_URL}
+      RENDER_SERVICE_ID: ${RENDER_SERVICE_ID}
+      RENDER_API_KEY: ${RENDER_API_KEY}
+
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jenkins/casc.yml:/var/jenkins_home/casc.yml
+
+volumes:
+  jenkins_home:
