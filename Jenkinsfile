@@ -106,7 +106,7 @@ pipeline {
 
     post {
         always {
-            cleanWs()
+            deleteDir()
             sh "docker rmi api-backend:${env.BUILD_ID} || true"
         }
         success {
