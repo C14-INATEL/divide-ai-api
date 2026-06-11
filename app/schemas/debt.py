@@ -74,3 +74,9 @@ class DebtSummary(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DebtListResponse(DebtSummary):
+    participants: list[DebtParticipantOut] = []
+
+    model_config = ConfigDict(from_attributes=True)

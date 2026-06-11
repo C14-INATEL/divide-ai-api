@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.exceptions import AppException
 from app.models.user import User
-from app.schemas.debt import DebtCreate, DebtUpdate, DebtResponse, DebtSummary, DebtParticipantOut
+from app.schemas.debt import DebtCreate, DebtUpdate, DebtResponse, DebtListResponse, DebtParticipantOut
 from app.services.debt_service import DebtService
 from app.utils.dependencies import get_current_user
 
@@ -25,7 +25,7 @@ def create_debt(
         raise HTTPException(status_code=e.status_code, detail=e.detail)
 
 
-@router.get("/", response_model=list[DebtSummary])
+@router.get("/", response_model=list[DebtListResponse])
 def list_debts(
     group_id: uuid.UUID,
     db: Session = Depends(get_db),
