@@ -17,8 +17,6 @@ to NULL out the members' primary-key ``group_id`` instead of deleting them.
 import uuid
 from decimal import Decimal
 
-import pytest
-
 from app.models.user import User
 from app.models.group import Group
 from app.models.group_member import GroupMember
@@ -34,67 +32,70 @@ def _make_user(session, email="creator@example.com") -> User:
     return user
 
 
-def test_delete_group_with_members_does_not_raise(db_session):
-    """The original crash: deleting a group that has members must succeed."""
-    repo = GroupRepository(db_session)
-    creator = _make_user(db_session)
-    other = _make_user(db_session, email="member@example.com")
-
-    group = repo.create(name="Trip", creator_id=creator.id)
-    repo.add_member(group_id=group.id, user_id=creator.id)
-    repo.add_member(group_id=group.id, user_id=other.id)
-    db_session.commit()
-
-    assert db_session.query(GroupMember).count() == 2
-
-    repo.delete(group)
-
-    assert db_session.query(Group).count() == 0
-    # Members are removed along with the group rather than being orphaned.
-    assert db_session.query(GroupMember).count() == 0
-
-
-def test_delete_group_cascades_to_debts(db_session):
-    """Debts belonging to the group are removed by the DB-level cascade."""
-    repo = GroupRepository(db_session)
-    creator = _make_user(db_session)
-
-    group = repo.create(name="Trip", creator_id=creator.id)
-    repo.add_member(group_id=group.id, user_id=creator.id)
-
+def _make_debt(group_id: uuid.UUID, creator_id: uuid.UUID) -> Debt:
     debt = Debt(
-        group_id=group.id,
-        creator_id=creator.id,
+        group_id=group_id,
+        creator_id=creator_id,
         title="Dinner",
         total_amount=Decimal("100.00"),
         split_type="igual",
     )
     debt.id = uuid.uuid4()
-    db_session.add(debt)
-    db_session.commit()
-
-    assert db_session.query(Debt).count() == 1
-
-    repo.delete(group)
-
-    assert db_session.query(Group).count() == 0
-    assert db_session.query(Debt).count() == 0
+    return debt
 
 
-def test_delete_group_keeps_unrelated_group_members(db_session):
-    """Deleting one group must not touch members of another group."""
-    repo = GroupRepository(db_session)
-    creator = _make_user(db_session)
+class TestGroupDeleteCascade:
 
-    target = repo.create(name="Target", creator_id=creator.id)
-    repo.add_member(group_id=target.id, user_id=creator.id)
+    def test_delete_group_with_members_does_not_raise(self, db_session):
+        """The original crash: deleting a group that has members must succeed."""
+        repo = GroupRepository(db_session)
+        creator = _make_user(db_session)
+        other = _make_user(db_session, email="member@example.com")
 
-    survivor = repo.create(name="Survivor", creator_id=creator.id)
-    repo.add_member(group_id=survivor.id, user_id=creator.id)
-    db_session.commit()
+        group = repo.create(name="Trip", creator_id=creator.id)
+        repo.add_member(group_id=group.id, user_id=creator.id)
+        repo.add_member(group_id=group.id, user_id=other.id)
+        db_session.commit()
 
-    repo.delete(target)
+        assert db_session.query(GroupMember).count() == 2
 
-    remaining = db_session.query(GroupMember).all()
-    assert len(remaining) == 1
-    assert remaining[0].group_id == survivor.id
+        repo.delete(group)
+
+        assert db_session.query(Group).count() == 0
+        # Members are removed along with the group rather than being orphaned.
+        assert db_session.query(GroupMember).count() == 0
+
+    def test_delete_group_cascades_to_debts(self, db_session):
+        """Debts belonging to the group are removed by the DB-level cascade."""
+        repo = GroupRepository(db_session)
+        creator = _make_user(db_session)
+
+        group = repo.create(name="Trip", creator_id=creator.id)
+        repo.add_member(group_id=group.id, user_id=creator.id)
+        db_session.add(_make_debt(group.id, creator.id))
+        db_session.commit()
+
+        assert db_session.query(Debt).count() == 1
+
+        repo.delete(group)
+
+        assert db_session.query(Group).count() == 0
+        assert db_session.query(Debt).count() == 0
+
+    def test_delete_group_keeps_unrelated_group_members(self, db_session):
+        """Deleting one group must not touch members of another group."""
+        repo = GroupRepository(db_session)
+        creator = _make_user(db_session)
+
+        target = repo.create(name="Target", creator_id=creator.id)
+        repo.add_member(group_id=target.id, user_id=creator.id)
+
+        survivor = repo.create(name="Survivor", creator_id=creator.id)
+        repo.add_member(group_id=survivor.id, user_id=creator.id)
+        db_session.commit()
+
+        repo.delete(target)
+
+        remaining = db_session.query(GroupMember).all()
+        assert len(remaining) == 1
+        assert remaining[0].group_id == survivor.id
