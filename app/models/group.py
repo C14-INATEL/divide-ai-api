@@ -23,5 +23,5 @@ class Group(Base):
     updated_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     creator: Mapped["User"] = relationship("User", back_populates="groups")
-    members: Mapped[list["GroupMember"]] = relationship("GroupMember", back_populates="group")
+    members: Mapped[list["GroupMember"]] = relationship("GroupMember", back_populates="group", cascade="all, delete-orphan", passive_deletes=True)
     
