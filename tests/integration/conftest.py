@@ -6,6 +6,7 @@ real JWTs (see ``auth_headers``), so the full ``get_current_user`` ->
 ``UserRepository`` lookup runs end to end against the same session.
 """
 
+import uuid
 from datetime import timedelta
 
 import pytest
@@ -13,7 +14,9 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.database import get_db
+from app.models.user import User
 from app.utils.jwt import create_access_token
+from app.utils.security import hash_password
 
 
 @pytest.fixture
@@ -34,3 +37,16 @@ def auth_headers(user) -> dict:
         expires_delta=timedelta(hours=1),
     )
     return {"Authorization": f"Bearer {token}"}
+
+
+def make_user(session, email: str, password: str = "Password123") -> User:
+    """Persist a user with a real (hashed) password and a flushed id."""
+    user = User(
+        email=email,
+        name=email.split("@")[0],
+        password=hash_password(password),
+    )
+    user.id = uuid.uuid4()
+    session.add(user)
+    session.flush()
+    return user
