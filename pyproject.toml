@@ -10,6 +10,7 @@ dependencies = [
     "bcrypt",
     "psycopg2-binary",
     "PyJWT",
+    "boto3",
 ]
 
 [project.optional-dependencies]

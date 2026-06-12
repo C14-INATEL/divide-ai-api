@@ -1,11 +1,12 @@
 import uuid
-import os
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime
 from fastapi import UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
+from app.config import settings
+from app.utils.storage import R2Storage
 from app.schemas.debt import DebtCreate, DebtUpdate
 from app.repositories.group_repository import GroupRepository
 from app.repositories.user_repository import UserRepository
@@ -228,16 +229,14 @@ class DebtService:
         if content_type not in allowed:
             raise AppException(422, "Tipo de arquivo não permitido; aceito: JPG, PNG, PDF")
 
-        # save file
-        upload_dir = os.path.join("uploads", "debts", str(debt_id))
-        os.makedirs(upload_dir, exist_ok=True)
-        filename = f"{current_user_id}_{file.filename}"
-        path = os.path.join(upload_dir, filename)
-        with open(path, "wb") as f:
-            content = file.file.read()
-            f.write(content)
+        content = file.file.read()
+        if len(content) > settings.MAX_UPLOAD_SIZE_BYTES:
+            raise AppException(422, "file exceeds maximum size of 5 MB")
 
-        participant.proof_path = path
+        key = f"debts/{debt_id}/{current_user_id}_{file.filename}"
+        proof_url = R2Storage().upload(content, key, content_type)
+
+        participant.proof_url = proof_url
         participant.has_proof = True
         participant.paid_at = datetime.utcnow()
         participant.status = ParticipantStatus.PAGO.value

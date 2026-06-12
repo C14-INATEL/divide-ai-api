@@ -6,7 +6,7 @@ DivideAI is a REST API for managing shared expenses among multiple users.
 Users join groups, register expenses, and the system automatically calculates
 balances and debts between participants.
 
-**Stack:** Python 3.11+ · FastAPI · SQLAlchemy 2.0 · PostgreSQL · Pydantic v2 · Alembic · bcrypt · PyJWT · uv
+**Stack:** Python 3.11+ · FastAPI · SQLAlchemy 2.0 · PostgreSQL · Pydantic v2 · Alembic · bcrypt · PyJWT · boto3 (Cloudflare R2) · uv
 
 ---
 
@@ -25,7 +25,7 @@ Router → Service → Repository → Database
 | `repositories/` | Data access     | SQLAlchemy queries only. No business rules.                |
 | `models/`    | ORM definitions    | SQLAlchemy table mappings. No methods with business logic. |
 | `schemas/`   | Contracts          | Pydantic input/output. No DB access.                       |
-| `utils/`     | Shared utilities   | e.g. `security.py` for bcrypt/JWT helpers.                |
+| `utils/`     | Shared utilities   | e.g. `security.py` for bcrypt/JWT, `storage.py` for R2 uploads. |
 | `database.py` | DB setup          | Engine, SessionLocal, `get_db` dependency.                |
 | `config.py`  | Settings           | `pydantic-settings` reading from `.env`.                  |
 
@@ -226,3 +226,4 @@ uv run alembic downgrade -1
 - Mutable default arguments.
 - `SELECT *` — always select explicit columns or load via ORM relationships.
 - Storing raw passwords — always hash with bcrypt before persisting.
+- Saving uploaded files to local disk — proof files go to Cloudflare R2 via `utils/storage.py`; persist only the public URL (`proof_url`). Enforce the 5 MB limit (`MAX_UPLOAD_SIZE_BYTES`) in the service.

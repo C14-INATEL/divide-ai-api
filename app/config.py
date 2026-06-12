@@ -8,6 +8,14 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 60
 
-    model_config = SettingsConfigDict(env_file=".env")
+
+    R2_BUCKET: str = ""
+    R2_ENDPOINT_URL: str = ""
+    R2_PUBLIC_URL: str = ""         
+    R2_ACCESS_KEY_ID: str = ""
+    R2_SECRET_ACCESS_KEY: str = ""
+    MAX_UPLOAD_SIZE_BYTES: int = 5 * 1024 * 1024   # 5 MB
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 settings = Settings()

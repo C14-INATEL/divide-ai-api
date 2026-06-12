@@ -1,7 +1,15 @@
 import pytest
-from sqlalchemy.orm import Session
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import Session, sessionmaker
 from uuid import UUID
 
+from app.database import Base
+# Import all models so their tables are registered on Base.metadata
+import app.models.user  # noqa: F401
+import app.models.group  # noqa: F401
+import app.models.group_member  # noqa: F401
+import app.models.debt  # noqa: F401
+import app.models.debt_participant  # noqa: F401
 from app.models.user import User
 from app.utils.security import hash_password
 
@@ -41,3 +49,32 @@ def mock_group_repo(mocker):
 @pytest.fixture
 def mock_user_repo(mocker):
     return mocker.Mock()
+
+
+@pytest.fixture
+def db_session():
+    """A real in-memory SQLite session with FK enforcement enabled.
+
+    Used for integration-style tests that need to exercise actual ORM
+    cascade behavior (e.g. deleting a group and its members), which mocked
+    repositories cannot cover.
+    """
+    engine = create_engine(
+        "sqlite:///:memory:", connect_args={"check_same_thread": False}
+    )
+
+    @event.listens_for(engine, "connect")
+    def _enable_sqlite_fk(dbapi_conn, _record):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+    Base.metadata.create_all(engine)
+    TestingSession = sessionmaker(bind=engine)
+    session = TestingSession()
+    try:
+        yield session
+    finally:
+        session.close()
+        Base.metadata.drop_all(engine)
+        engine.dispose()
