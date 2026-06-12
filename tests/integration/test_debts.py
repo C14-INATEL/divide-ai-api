@@ -11,23 +11,14 @@ from types import SimpleNamespace
 import pytest
 
 from app.config import settings
-from app.models.user import User
 from app.repositories.group_repository import GroupRepository
 
-from tests.integration.conftest import auth_headers
+from tests.integration.conftest import auth_headers, make_user
 
 
 # --------------------------------------------------------------------------- #
 # Helpers
 # --------------------------------------------------------------------------- #
-def _make_user(session, email: str) -> User:
-    user = User(email=email, name=email.split("@")[0], password="hashed")
-    user.id = uuid.uuid4()
-    session.add(user)
-    session.flush()
-    return user
-
-
 def _debt_payload(world, **overrides) -> dict:
     payload = {
         "group_id": str(world.group.id),
@@ -64,9 +55,9 @@ def _upload_proof(client, world, user) -> dict:
 @pytest.fixture
 def world(db_session):
     """A group with a creator + member, plus an outsider not in the group."""
-    creator = _make_user(db_session, "creator@example.com")
-    member = _make_user(db_session, "member@example.com")
-    outsider = _make_user(db_session, "outsider@example.com")
+    creator = make_user(db_session, "creator@example.com")
+    member = make_user(db_session, "member@example.com")
+    outsider = make_user(db_session, "outsider@example.com")
 
     repo = GroupRepository(db_session)
     group = repo.create(name="Trip", creator_id=creator.id)
