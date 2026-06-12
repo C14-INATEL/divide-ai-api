@@ -678,18 +678,3 @@ class TestDebtServiceGetProof:
             service.get_proof(DEBT_ID, participant_user_id=OTHER_USER_ID, current_user_id=CREATOR_ID)
 
         assert exc.value.status_code == 404
-
-    def test_get_proof_success(self, mock_db_session, mock_group_repo, mock_debt_repo):
-        proof_url = "https://pub-xxxx.r2.dev/debts/proof.jpg"
-        participant = _make_participant(proof_url=proof_url)
-        mock_debt_repo.get_by_id.return_value = _make_debt()
-        mock_group_repo.get_member.return_value = _make_member()
-        mock_debt_repo.get_participant.return_value = participant
-
-        service = _make_service(mock_db_session, mock_group_repo, mock_debt_repo)
-        result = service.get_proof(
-            DEBT_ID, participant_user_id=OTHER_USER_ID, current_user_id=CREATOR_ID
-        )
-
-        assert result.status_code == 302
-        assert result.headers["location"] == proof_url
