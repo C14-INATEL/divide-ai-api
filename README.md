@@ -40,12 +40,12 @@ Novos models devem ser registrados em `app/models/__init__.py` para que o Alembi
 
 ## Feature: Dívidas (Debts)
 
-O sistema agora suporta criar e gerenciar dívidas dentro de um `Group`. Uma dívida tem `creator_id`, `group_id`, `total_amount`, `split_type` (`homogenea` ou `heterogenea`), `due_date` e `status` (`pendente`/`pago`). Participantes são vinculados via `debt_participants` com `percentage`, `amount`, `status` (pendente/pago/confirmado) e campos para comprovantes (`has_proof`, `proof_path`).
+O sistema agora suporta criar e gerenciar dívidas dentro de um `Group`. Uma dívida tem `creator_id`, `group_id`, `total_amount`, `split_type` (`homogenea` ou `heterogenea`), `due_date` e `status` (`pendente`/`pago`). Participantes são vinculados via `debt_participants` com `percentage`, `amount`, `status` (pendente/pago/confirmado) e campos para comprovantes (`has_proof`, `proof_url`).
 
 Pontos principais:
 - Se `participants` não for informado na criação, a dívida é automaticamente associada a todos os membros do grupo (exceto o `creator`).
 - `HOMOGENEA` divide porcentagens igualmente; `HETEROGENEA` exige porcentagens que somem 100.
-- Participantes fazem upload de comprovante; o `creator` é quem confirma a quitação. Quando todos os participantes são confirmados, a dívida passa para `pago`.
+- Participantes fazem upload de comprovante (JPG, PNG ou PDF, máx. **5 MB**); o arquivo é armazenado no **Cloudflare R2** e a URL pública é salva em `proof_url`. O `creator` é quem confirma a quitação. Quando todos os participantes são confirmados, a dívida passa para `pago`.
 - Exclusão: somente o `creator` pode apagar uma dívida e apenas se não houver participantes associados.
 
 Endpoints (resumo):
@@ -148,4 +148,12 @@ uv run alembic downgrade -1
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/myproject
 DEBUG=false
+
+# Cloudflare R2 (armazenamento de comprovantes)
+R2_BUCKET=seu_bucket
+R2_ENDPOINT_URL=https://<account_id>.r2.cloudflarestorage.com   # "s3 api" do R2
+R2_PUBLIC_URL=https://pub-xxxx.r2.dev                           # public development url
+R2_ACCESS_KEY_ID=sua_access_key
+R2_SECRET_ACCESS_KEY=sua_secret_access_key
+MAX_UPLOAD_SIZE_BYTES=5242880                                   # 5 MB
 ```
