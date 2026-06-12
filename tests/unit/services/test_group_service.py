@@ -187,6 +187,40 @@ class TestGroupServiceGetById:
         assert result is group
 
 
+class TestGroupServiceDelete:
+
+    def test_delete_group_not_found(self, mock_db_session, mock_group_repo, mock_user_repo):
+        mock_group_repo.get_by_id.return_value = None
+
+        service = _make_service(mock_db_session, mock_group_repo, mock_user_repo)
+
+        with pytest.raises(AppException) as exc:
+            service.delete(GROUP_ID, current_user_id=CREATOR_ID)
+
+        assert exc.value.status_code == 404
+        mock_group_repo.delete.assert_not_called()
+
+    def test_delete_not_creator(self, mock_db_session, mock_group_repo, mock_user_repo):
+        mock_group_repo.get_by_id.return_value = _make_group(creator_id=CREATOR_ID)
+
+        service = _make_service(mock_db_session, mock_group_repo, mock_user_repo)
+
+        with pytest.raises(AppException) as exc:
+            service.delete(GROUP_ID, current_user_id=OTHER_USER_ID)
+
+        assert exc.value.status_code == 403
+        mock_group_repo.delete.assert_not_called()
+
+    def test_delete_success(self, mock_db_session, mock_group_repo, mock_user_repo):
+        group = _make_group(creator_id=CREATOR_ID)
+        mock_group_repo.get_by_id.return_value = group
+
+        service = _make_service(mock_db_session, mock_group_repo, mock_user_repo)
+        service.delete(GROUP_ID, current_user_id=CREATOR_ID)
+
+        mock_group_repo.delete.assert_called_once_with(group)
+
+
 class TestGroupServiceRemoveMember:
 
     def test_remove_member_group_not_found(self, mock_db_session, mock_group_repo, mock_user_repo):

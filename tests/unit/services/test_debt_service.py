@@ -42,7 +42,7 @@ def _make_participant(
     user_id: UUID = OTHER_USER_ID,
     status: str = ParticipantStatus.PENDENTE.value,
     has_proof: bool = False,
-    proof_path: str | None = None,
+    proof_url: str | None = None,
 ) -> DebtParticipant:
     p = DebtParticipant(
         user_id=user_id,
@@ -51,7 +51,7 @@ def _make_participant(
         status=status,
         has_proof=has_proof,
     )
-    p.proof_path = proof_path
+    p.proof_url = proof_url
     return p
 
 
@@ -513,16 +513,13 @@ class TestDebtServiceUploadProof:
 
         assert exc.value.status_code == 422
 
-    @patch("app.services.debt_service.os.makedirs")
-    @patch("builtins.open", new_callable=Mock)
-    def test_upload_success(self, mock_open, mock_makedirs, mock_db_session, mock_group_repo, mock_debt_repo):
+    @patch("app.services.debt_service.R2Storage")
+    def test_upload_success(self, mock_r2, mock_db_session, mock_group_repo, mock_debt_repo):
         participant = _make_participant()
         mock_debt_repo.get_by_id.return_value = _make_debt()
         mock_debt_repo.get_participant.return_value = participant
 
-        mock_file_handle = Mock()
-        mock_open.return_value.__enter__ = Mock(return_value=mock_file_handle)
-        mock_open.return_value.__exit__ = Mock(return_value=False)
+        mock_r2.return_value.upload.return_value = "https://pub-xxxx.r2.dev/debts/key.jpg"
 
         service = _make_service(mock_db_session, mock_group_repo, mock_debt_repo)
         result = service.upload_proof(
@@ -531,7 +528,25 @@ class TestDebtServiceUploadProof:
 
         assert result.has_proof is True
         assert result.status == ParticipantStatus.PAGO.value
+        assert result.proof_url == "https://pub-xxxx.r2.dev/debts/key.jpg"
+        mock_r2.return_value.upload.assert_called_once()
         mock_debt_repo.update_participant.assert_called_once_with(participant)
+
+    @patch("app.services.debt_service.R2Storage")
+    def test_upload_exceeds_size_limit(self, mock_r2, mock_db_session, mock_group_repo, mock_debt_repo):
+        mock_debt_repo.get_by_id.return_value = _make_debt()
+        mock_debt_repo.get_participant.return_value = _make_participant()
+
+        oversized = self._make_file()
+        oversized.file.read.return_value = b"x" * (5 * 1024 * 1024 + 1)
+
+        service = _make_service(mock_db_session, mock_group_repo, mock_debt_repo)
+
+        with pytest.raises(AppException) as exc:
+            service.upload_proof(DEBT_ID, current_user_id=OTHER_USER_ID, file=oversized)
+
+        assert exc.value.status_code == 422
+        mock_r2.return_value.upload.assert_not_called()
 
 
 class TestDebtServiceConfirmPayment:
@@ -643,7 +658,7 @@ class TestDebtServiceGetProof:
     def test_get_proof_participant_has_no_proof(self, mock_db_session, mock_group_repo, mock_debt_repo):
         mock_debt_repo.get_by_id.return_value = _make_debt()
         mock_group_repo.get_member.return_value = _make_member()
-        mock_debt_repo.get_participant.return_value = _make_participant(proof_path=None)
+        mock_debt_repo.get_participant.return_value = _make_participant(proof_url=None)
 
         service = _make_service(mock_db_session, mock_group_repo, mock_debt_repo)
 
@@ -664,9 +679,9 @@ class TestDebtServiceGetProof:
 
         assert exc.value.status_code == 404
 
-    @patch("app.services.debt_service.os.path.exists", return_value=True)
-    def test_get_proof_success(self, mock_exists, mock_db_session, mock_group_repo, mock_debt_repo):
-        participant = _make_participant(proof_path="/uploads/debts/proof.jpg")
+    def test_get_proof_success(self, mock_db_session, mock_group_repo, mock_debt_repo):
+        proof_url = "https://pub-xxxx.r2.dev/debts/proof.jpg"
+        participant = _make_participant(proof_url=proof_url)
         mock_debt_repo.get_by_id.return_value = _make_debt()
         mock_group_repo.get_member.return_value = _make_member()
         mock_debt_repo.get_participant.return_value = participant
@@ -676,18 +691,5 @@ class TestDebtServiceGetProof:
             DEBT_ID, participant_user_id=OTHER_USER_ID, current_user_id=CREATOR_ID
         )
 
-        assert result is not None
-
-    @patch("app.services.debt_service.os.path.exists", return_value=False)
-    def test_get_proof_file_not_on_disk(self, mock_exists, mock_db_session, mock_group_repo, mock_debt_repo):
-        participant = _make_participant(proof_path="/uploads/debts/missing.jpg")
-        mock_debt_repo.get_by_id.return_value = _make_debt()
-        mock_group_repo.get_member.return_value = _make_member()
-        mock_debt_repo.get_participant.return_value = participant
-
-        service = _make_service(mock_db_session, mock_group_repo, mock_debt_repo)
-
-        with pytest.raises(AppException) as exc:
-            service.get_proof(DEBT_ID, participant_user_id=OTHER_USER_ID, current_user_id=CREATOR_ID)
-
-        assert exc.value.status_code == 404
+        assert result.status_code == 302
+        assert result.headers["location"] == proof_url
