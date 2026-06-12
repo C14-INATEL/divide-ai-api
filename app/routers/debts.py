@@ -1,10 +1,9 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, File
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Depends, Response, UploadFile, File
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.exceptions import AppException
 from app.models.user import User
 from app.schemas.debt import DebtCreate, DebtUpdate, DebtResponse, DebtListResponse, DebtParticipantOut
 from app.services.debt_service import DebtService
@@ -19,10 +18,7 @@ def create_debt(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        return DebtService(db).create(data, creator_id=current_user.id)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return DebtService(db).create(data, creator_id=current_user.id)
 
 
 @router.get("/", response_model=list[DebtListResponse])
@@ -31,10 +27,7 @@ def list_debts(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        return DebtService(db).list_by_group(group_id, current_user_id=current_user.id)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return DebtService(db).list_by_group(group_id, current_user_id=current_user.id)
 
 
 @router.get("/{debt_id}", response_model=DebtResponse)
@@ -43,10 +36,7 @@ def get_debt(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        return DebtService(db).get_by_id(debt_id, current_user_id=current_user.id)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return DebtService(db).get_by_id(debt_id, current_user_id=current_user.id)
 
 
 @router.patch("/{debt_id}", response_model=DebtResponse)
@@ -56,10 +46,7 @@ def update_debt(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        return DebtService(db).update(debt_id, data, current_user_id=current_user.id)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return DebtService(db).update(debt_id, data, current_user_id=current_user.id)
 
 
 @router.delete("/{debt_id}", status_code=204)
@@ -68,10 +55,7 @@ def delete_debt(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        DebtService(db).delete(debt_id, current_user_id=current_user.id)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    DebtService(db).delete(debt_id, current_user_id=current_user.id)
     return Response(status_code=204)
 
 
@@ -86,14 +70,11 @@ def upload_proof(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        return DebtService(db).upload_proof(
-            debt_id=debt_id,
-            current_user_id=current_user.id,
-            file=file,
-        )
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return DebtService(db).upload_proof(
+        debt_id=debt_id,
+        current_user_id=current_user.id,
+        file=file,
+    )
 
 
 @router.post(
@@ -106,14 +87,11 @@ def confirm_payment(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        return DebtService(db).confirm_payment(
-            debt_id=debt_id,
-            participant_user_id=user_id,
-            current_user_id=current_user.id,
-        )
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return DebtService(db).confirm_payment(
+        debt_id=debt_id,
+        participant_user_id=user_id,
+        current_user_id=current_user.id,
+    )
 
 
 @router.get("/{debt_id}/participants/{user_id}/proof")
@@ -122,12 +100,9 @@ def get_proof(
     user_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> RedirectResponse:
-    try:
-        return DebtService(db).get_proof(
-            debt_id=debt_id,
-            participant_user_id=user_id,
-            current_user_id=current_user.id,
-        )
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+) -> FileResponse:
+    return DebtService(db).get_proof(
+        debt_id=debt_id,
+        participant_user_id=user_id,
+        current_user_id=current_user.id,
+    )
