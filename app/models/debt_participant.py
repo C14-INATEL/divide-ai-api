@@ -21,7 +21,7 @@ class DebtParticipant(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False, default="pendente")
     has_proof: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    proof_path: Mapped[str] = mapped_column(String, nullable=True)
+    proof_url: Mapped[str] = mapped_column(String, nullable=True)
     paid_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=True)
     confirmed_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=True)
 
