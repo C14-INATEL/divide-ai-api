@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import Optional
 from app.database import get_db
-from app.exceptions import AppException
 from app.services.user_service import UserService
 from app.schemas.user import UserCreate, UserResponse, UserUpdate, UserPasswordUpdate
 from app.models.user import User
@@ -17,17 +16,11 @@ def search_users(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    try:
-        return UserService(db).search_users(name)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return UserService(db).search_users(name)
 
 @router.post("/", response_model=UserResponse, status_code=201)
 def create_user(data: UserCreate, db: Session = Depends(get_db)):
-    try:
-        return UserService(db).create(data)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return UserService(db).create(data)
 
 @router.get("/{user_id}", response_model=UserResponse)
 def get_user(
@@ -35,10 +28,7 @@ def get_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    try:
-        return UserService(db).get_by_id(user_id)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return UserService(db).get_by_id(user_id)
 
 @router.patch("/{user_id}", response_model=UserResponse)
 def update_user(
@@ -47,10 +37,7 @@ def update_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    try:
-        return UserService(db).update(user_id, data)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return UserService(db).update(user_id, data)
 
 @router.patch("/{user_id}/password", response_model=UserResponse)
 def update_user_password(
@@ -59,7 +46,4 @@ def update_user_password(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    try:
-        return UserService(db).update_password(user_id, data)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return UserService(db).update_password(user_id, data)

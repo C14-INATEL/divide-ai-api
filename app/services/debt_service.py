@@ -27,7 +27,7 @@ class DebtService:
     def _assert_member(self, group_id: uuid.UUID, user_id: uuid.UUID):
         member = self.group_repo.get_member(group_id, user_id)
         if not member:
-            raise AppException(403, "user is not a member of the group")
+            raise AppException(403, "Você não é membro deste grupo")
 
     def _compute_participants(
         self,
@@ -38,7 +38,7 @@ class DebtService:
     ) -> list[DebtParticipant]:
         n = len(participants_input)
         if n == 0:
-            raise AppException(422, "must have at least one participant")
+            raise AppException(422, "É necessário informar ao menos um participante")
 
         percentages: list[Decimal] = []
         if split_type == DebtSplitType.HOMOGENEA:
@@ -54,19 +54,19 @@ class DebtService:
             # HETEROGENEA: require percentage for each participant
             for p in participants_input:
                 if p.percentage is None:
-                    raise AppException(422, "all participants must have percentage for heterogenea split")
+                    raise AppException(422, "Todos os participantes devem ter porcentagem para divisão heterogênea")
                 percentages.append(Decimal(p.percentage).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
         # verify participants are group members
         for p in participants_input:
             member = self.group_repo.get_member(group_id, p.user_id)
             if not member:
-                raise AppException(422, f"user {p.user_id} is not a member of the group")
+                raise AppException(422, f"O usuário {p.user_id} não é membro do grupo")
 
         # verify percentages sum to 100
         total_pct = sum(percentages)
         if total_pct != Decimal("100.00"):
-            raise AppException(422, "percentages must sum to 100")
+            raise AppException(422, "As porcentagens devem somar 100")
 
         # compute amounts
         amounts: list[Decimal] = []
@@ -96,7 +96,7 @@ class DebtService:
     def create(self, data: DebtCreate, creator_id: uuid.UUID):
         group = self.group_repo.get_by_id(data.group_id)
         if not group:
-            raise AppException(404, "group not found")
+            raise AppException(404, "Grupo não encontrado")
 
         # creator must be member
         self._assert_member(data.group_id, creator_id)
@@ -144,16 +144,16 @@ class DebtService:
     def get_by_id(self, debt_id: uuid.UUID, current_user_id: uuid.UUID):
         debt = self.debt_repo.get_by_id(debt_id)
         if not debt:
-            raise AppException(404, "debt not found")
+            raise AppException(404, "Dívida não encontrada")
         self._assert_member(debt.group_id, current_user_id)
         return debt
 
     def update(self, debt_id: uuid.UUID, data: DebtUpdate, current_user_id: uuid.UUID) -> Debt:
         debt = self.debt_repo.get_by_id(debt_id)
         if not debt:
-            raise AppException(404, "debt not found")
+            raise AppException(404, "Dívida não encontrada")
         if debt.creator_id != current_user_id:
-            raise AppException(403, "only creator can edit the debt")
+            raise AppException(403, "Apenas o criador pode editar esta dívida")
 
         monetary_fields = {"total_amount", "split_type", "participants"}
         monetary_change = bool(monetary_fields & data.model_fields_set)
@@ -163,7 +163,7 @@ class DebtService:
             if any(p.status != ParticipantStatus.PENDENTE.value for p in debt.participants):
                 raise AppException(
                     422,
-                    "cannot edit monetary fields after a participant has paid or confirmed",
+                    "Não é possível alterar valores após um participante ter pago ou confirmado",
                 )
 
             effective_total = (
@@ -201,11 +201,11 @@ class DebtService:
     def delete(self, debt_id: uuid.UUID, current_user_id: uuid.UUID) -> None:
         debt = self.debt_repo.get_by_id(debt_id)
         if not debt:
-            raise AppException(404, "debt not found")
+            raise AppException(404, "Dívida não encontrada")
         if debt.creator_id != current_user_id:
-            raise AppException(403, "only creator can delete the debt")
+            raise AppException(403, "Apenas o criador pode excluir esta dívida")
         if debt.participants and len(debt.participants) > 0:
-            raise AppException(422, "cannot delete debt with participants associated")
+            raise AppException(422, "Não é possível excluir uma dívida com participantes associados")
         self.debt_repo.delete(debt)
 
     def upload_proof(
@@ -220,13 +220,13 @@ class DebtService:
         # participant must be member of the debt
         participant = self.debt_repo.get_participant(debt_id, current_user_id)
         if not participant:
-            raise AppException(403, "user is not a participant of the debt")
+            raise AppException(403, "Você não é participante desta dívida")
 
         # validate file type
         allowed = {"image/jpeg", "image/png", "application/pdf"}
         content_type = getattr(file, "content_type", None)
         if content_type not in allowed:
-            raise AppException(422, "file type not allowed; accepted: JPG, PNG, PDF")
+            raise AppException(422, "Tipo de arquivo não permitido; aceito: JPG, PNG, PDF")
 
         # save file
         upload_dir = os.path.join("uploads", "debts", str(debt_id))
@@ -253,15 +253,15 @@ class DebtService:
     ):
         debt = self.debt_repo.get_by_id(debt_id)
         if not debt:
-            raise AppException(404, "debt not found")
+            raise AppException(404, "Dívida não encontrada")
         # only creator can confirm
         if debt.creator_id != current_user_id:
-            raise AppException(403, "only creator can confirm payments")
+            raise AppException(403, "Apenas o criador pode confirmar pagamentos")
         participant = self.debt_repo.get_participant(debt_id, participant_user_id)
         if not participant:
-            raise AppException(404, "participant not found")
+            raise AppException(404, "Participante não encontrado")
         if participant.status != ParticipantStatus.PAGO.value:
-            raise AppException(422, "participant has not uploaded proof")
+            raise AppException(422, "Participante não enviou comprovante")
         participant.status = ParticipantStatus.CONFIRMADO.value
         participant.confirmed_at = datetime.utcnow()
         self.debt_repo.update_participant(participant)
@@ -281,13 +281,13 @@ class DebtService:
     ):
         debt = self.debt_repo.get_by_id(debt_id)
         if not debt:
-            raise AppException(404, "debt not found")
+            raise AppException(404, "Dívida não encontrada")
         # requester must be group member
         self._assert_member(debt.group_id, current_user_id)
         participant = self.debt_repo.get_participant(debt_id, participant_user_id)
         if not participant or not participant.proof_path:
-            raise AppException(404, "proof not found")
+            raise AppException(404, "Comprovante não encontrado")
         if not os.path.exists(participant.proof_path):
-            raise AppException(404, "proof not found on disk")
+            raise AppException(404, "Comprovante não encontrado no servidor")
         return FileResponse(participant.proof_path, filename=os.path.basename(participant.proof_path))
 

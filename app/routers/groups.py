@@ -1,8 +1,7 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.exceptions import AppException
 from app.services.group_service import GroupService
 from app.schemas.group import GroupCreate, GroupUpdate, GroupResponse, GroupMemberAdd, GroupMemberOut
 from app.models.user import User
@@ -17,10 +16,7 @@ def create_group(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        return GroupService(db).create(data, creator_id=current_user.id)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return GroupService(db).create(data, creator_id=current_user.id)
 
 
 @router.get("/", response_model=list[GroupResponse])
@@ -28,10 +24,7 @@ def list_groups(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        return GroupService(db).list_by_user(current_user.id)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return GroupService(db).list_by_user(current_user.id)
 
 
 @router.get("/{group_id}", response_model=GroupResponse)
@@ -40,10 +33,7 @@ def get_group(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        return GroupService(db).get_by_id(group_id, current_user_id=current_user.id)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return GroupService(db).get_by_id(group_id, current_user_id=current_user.id)
 
 
 @router.patch("/{group_id}", response_model=GroupResponse)
@@ -53,10 +43,7 @@ def update_group(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        return GroupService(db).update(group_id, data, current_user_id=current_user.id)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return GroupService(db).update(group_id, data, current_user_id=current_user.id)
 
 
 @router.delete("/{group_id}", status_code=204)
@@ -65,10 +52,7 @@ def delete_group(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        GroupService(db).delete(group_id, current_user_id=current_user.id)
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    GroupService(db).delete(group_id, current_user_id=current_user.id)
     return Response(status_code=204)
 
 
@@ -79,14 +63,11 @@ def add_member(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        return GroupService(db).add_member(
-            group_id=group_id,
-            user_id_to_add=data.user_id,
-            current_user_id=current_user.id,
-        )
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return GroupService(db).add_member(
+        group_id=group_id,
+        user_id_to_add=data.user_id,
+        current_user_id=current_user.id,
+    )
 
 
 @router.delete("/{group_id}/members/{user_id}", status_code=204)
@@ -96,12 +77,9 @@ def remove_member(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        GroupService(db).remove_member(
-            group_id=group_id,
-            user_id_to_remove=user_id,
-            current_user_id=current_user.id,
-        )
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    GroupService(db).remove_member(
+        group_id=group_id,
+        user_id_to_remove=user_id,
+        current_user_id=current_user.id,
+    )
     return Response(status_code=204)
