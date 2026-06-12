@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 from uuid import UUID
 
 from app.database import Base
@@ -59,8 +60,13 @@ def db_session():
     cascade behavior (e.g. deleting a group and its members), which mocked
     repositories cannot cover.
     """
+    # StaticPool keeps a single shared connection so the in-memory database is
+    # visible across threads (the FastAPI TestClient runs endpoints in a
+    # worker thread, which would otherwise get its own empty :memory: db).
     engine = create_engine(
-        "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
 
     @event.listens_for(engine, "connect")

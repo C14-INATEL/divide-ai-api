@@ -446,9 +446,15 @@ class TestDebtServiceDelete:
 
         assert exc.value.status_code == 403
 
-    def test_delete_with_participants(self, mock_db_session, mock_group_repo, mock_debt_repo):
+    @pytest.mark.parametrize(
+        "status",
+        [ParticipantStatus.PAGO.value, ParticipantStatus.CONFIRMADO.value],
+    )
+    def test_delete_blocked_when_payment_sent_or_confirmed(
+        self, mock_db_session, mock_group_repo, mock_debt_repo, status
+    ):
         debt = _make_debt(creator_id=CREATOR_ID)
-        debt.participants = [_make_participant()]
+        debt.participants = [_make_participant(status=status)]
         mock_debt_repo.get_by_id.return_value = debt
 
         service = _make_service(mock_db_session, mock_group_repo, mock_debt_repo)
@@ -457,6 +463,19 @@ class TestDebtServiceDelete:
             service.delete(DEBT_ID, current_user_id=CREATOR_ID)
 
         assert exc.value.status_code == 422
+        mock_debt_repo.delete.assert_not_called()
+
+    def test_delete_success_with_pending_participants(
+        self, mock_db_session, mock_group_repo, mock_debt_repo
+    ):
+        debt = _make_debt(creator_id=CREATOR_ID)
+        debt.participants = [_make_participant(status=ParticipantStatus.PENDENTE.value)]
+        mock_debt_repo.get_by_id.return_value = debt
+
+        service = _make_service(mock_db_session, mock_group_repo, mock_debt_repo)
+        service.delete(DEBT_ID, current_user_id=CREATOR_ID)
+
+        mock_debt_repo.delete.assert_called_once_with(debt)
 
     def test_delete_success(self, mock_db_session, mock_group_repo, mock_debt_repo):
         debt = _make_debt(creator_id=CREATOR_ID)
@@ -513,13 +532,13 @@ class TestDebtServiceUploadProof:
 
         assert exc.value.status_code == 422
 
-    @patch("app.services.debt_service.R2Storage")
-    def test_upload_success(self, mock_r2, mock_db_session, mock_group_repo, mock_debt_repo):
+    @patch("app.services.debt_service.get_storage")
+    def test_upload_success(self, mock_get_storage, mock_db_session, mock_group_repo, mock_debt_repo):
         participant = _make_participant()
         mock_debt_repo.get_by_id.return_value = _make_debt()
         mock_debt_repo.get_participant.return_value = participant
 
-        mock_r2.return_value.upload.return_value = "https://pub-xxxx.r2.dev/debts/key.jpg"
+        mock_get_storage.return_value.upload.return_value = "https://pub-xxxx.r2.dev/debts/key.jpg"
 
         service = _make_service(mock_db_session, mock_group_repo, mock_debt_repo)
         result = service.upload_proof(
@@ -529,11 +548,11 @@ class TestDebtServiceUploadProof:
         assert result.has_proof is True
         assert result.status == ParticipantStatus.PAGO.value
         assert result.proof_url == "https://pub-xxxx.r2.dev/debts/key.jpg"
-        mock_r2.return_value.upload.assert_called_once()
+        mock_get_storage.return_value.upload.assert_called_once()
         mock_debt_repo.update_participant.assert_called_once_with(participant)
 
-    @patch("app.services.debt_service.R2Storage")
-    def test_upload_exceeds_size_limit(self, mock_r2, mock_db_session, mock_group_repo, mock_debt_repo):
+    @patch("app.services.debt_service.get_storage")
+    def test_upload_exceeds_size_limit(self, mock_get_storage, mock_db_session, mock_group_repo, mock_debt_repo):
         mock_debt_repo.get_by_id.return_value = _make_debt()
         mock_debt_repo.get_participant.return_value = _make_participant()
 
@@ -546,7 +565,7 @@ class TestDebtServiceUploadProof:
             service.upload_proof(DEBT_ID, current_user_id=OTHER_USER_ID, file=oversized)
 
         assert exc.value.status_code == 422
-        mock_r2.return_value.upload.assert_not_called()
+        mock_get_storage.return_value.upload.assert_not_called()
 
 
 class TestDebtServiceConfirmPayment:
