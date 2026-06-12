@@ -76,7 +76,7 @@ app.include_router(debts.router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"], # A Lista VIP
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "https://divide-ai-front.vercel.app"], # A Lista VIP
     allow_credentials=True,
     allow_methods=["*"], # Permite GET, POST, DELETE, etc
     allow_headers=["*"], # Permite que o Token passe
