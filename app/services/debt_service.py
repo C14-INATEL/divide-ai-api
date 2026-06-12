@@ -1,12 +1,13 @@
+import os
 import uuid
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime
 from fastapi import UploadFile
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.utils.storage import R2Storage
+from app.utils.storage import get_storage
 from app.schemas.debt import DebtCreate, DebtUpdate
 from app.repositories.group_repository import GroupRepository
 from app.repositories.user_repository import UserRepository
@@ -205,8 +206,9 @@ class DebtService:
             raise AppException(404, "Dívida não encontrada")
         if debt.creator_id != current_user_id:
             raise AppException(403, "Apenas o criador pode excluir esta dívida")
-        if debt.participants and len(debt.participants) > 0:
-            raise AppException(422, "Não é possível excluir uma dívida com participantes associados")
+        blocking_statuses = {ParticipantStatus.PAGO.value, ParticipantStatus.CONFIRMADO.value}
+        if any(p.status in blocking_statuses for p in debt.participants):
+            raise AppException(422, "Não é possível excluir uma dívida com pagamentos enviados ou confirmados")
         self.debt_repo.delete(debt)
 
     def upload_proof(
@@ -234,7 +236,7 @@ class DebtService:
             raise AppException(422, "file exceeds maximum size of 5 MB")
 
         key = f"debts/{debt_id}/{current_user_id}_{file.filename}"
-        proof_url = R2Storage().upload(content, key, content_type)
+        proof_url = get_storage().upload(content, key, content_type)
 
         participant.proof_url = proof_url
         participant.has_proof = True
@@ -284,10 +286,14 @@ class DebtService:
         # requester must be group member
         self._assert_member(debt.group_id, current_user_id)
         participant = self.debt_repo.get_participant(debt_id, participant_user_id)
-        proof_path = getattr(participant, "proof_path", None)
-        if not participant or not proof_path:
+        if not participant or not participant.proof_url:
             raise AppException(404, "Comprovante não encontrado")
-        if not os.path.exists(proof_path):
+        proof_url = participant.proof_url
+        # Remote storage (R2): the value is a public URL -> redirect to it.
+        if proof_url.startswith("http://") or proof_url.startswith("https://"):
+            return RedirectResponse(proof_url)
+        # Local storage: the value is a filesystem path -> serve the file.
+        if not os.path.exists(proof_url):
             raise AppException(404, "Comprovante não encontrado no servidor")
-        return FileResponse(proof_path, filename=os.path.basename(proof_path))
+        return FileResponse(proof_url, filename=os.path.basename(proof_url))
 

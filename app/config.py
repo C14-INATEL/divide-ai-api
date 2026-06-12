@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     R2_PUBLIC_URL: str = ""         
     R2_ACCESS_KEY_ID: str = ""
     R2_SECRET_ACCESS_KEY: str = ""
+    LOCAL_STORAGE_DIR: str = "uploads"   # used when R2 is not configured
     MAX_UPLOAD_SIZE_BYTES: int = 5 * 1024 * 1024   # 5 MB
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
