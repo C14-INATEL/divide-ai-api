@@ -1,12 +1,19 @@
 # DivideAI - API REST
 
 ![DivideAI](https://img.shields.io/badge/API-FastAPI-009688?style=flat-square) ![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
-Henrique Pizzoni – Back-end (Dev, QA e DevOps) e Scrum Master 
-Davi Rosim – Back-end (Dev e QA) 
-João Pedro Martins - Back-end (Tech-lead, Dev e QA)  
-Tiago Andrade – Front-end (Dev e QA), Scrum Master 
-Juliano Aleixo – Front end (Dev, Tech Lead, QA e DevOps) 
-Leonardo Ferreira – Front end (Dev e QA) 
+
+
+Henrique Pizzoni/Back-end (Dev, QA e DevOps) e Scrum Master 
+
+Davi Rosim/Back-end (Dev e QA) 
+
+João Pedro Martins/Back-end (Tech-lead, Dev e QA)  
+
+Tiago Andrade/Front-end (Dev e QA), Scrum Master 
+
+Juliano Aleixo/Front end (Dev, Tech Lead, QA e DevOps) 
+
+Leonardo Ferreira/Front end (Dev e QA) 
 
 ---
 
