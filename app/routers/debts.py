@@ -100,7 +100,7 @@ def get_proof(
     user_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> FileResponse:
+):
     return DebtService(db).get_proof(
         debt_id=debt_id,
         participant_user_id=user_id,
