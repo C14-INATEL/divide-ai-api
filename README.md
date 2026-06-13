@@ -1,6 +1,12 @@
 # DivideAI - API REST
 
 ![DivideAI](https://img.shields.io/badge/API-FastAPI-009688?style=flat-square) ![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
+Henrique Pizzoni – Back-end (Dev, QA e DevOps) e Scrum Master 
+Davi Rosim – Back-end (Dev e QA) 
+João Pedro Martins - Back-end (Tech-lead, Dev e QA)  
+Tiago Andrade – Front-end (Dev e QA), Scrum Master 
+Juliano Aleixo – Front end (Dev, Tech Lead, QA e DevOps) 
+Leonardo Ferreira – Front end (Dev e QA) 
 
 ---
 
@@ -450,7 +456,175 @@ Este projeto atende aos seguintes critérios e requisitos:
 - [Instruções do Pipeline](pipeline_instructions.md)
 
 ---
+## Metodologia de desenvolvimento
+O grupo adotou uma abordagem ágil híbrida, utilizando conceitos de Scrum e Kanban. O gerenciamento das atividades foi realizado através do Jira, onde foram registradas histórias de usuário, tarefas e o acompanhamento do progresso do projeto. 
+
+O Jira foi utilizado por por possuir tanto o método de Scrum quanto o Kanban, facilitando para mover uma tarefa pela esteira de produção, definir histórias de usuário, quebrar uma tarefa em subtasks menores, realizar reuniões com certa frequência, e o grupo já possuía uma certa familiaridade devido à experiência profissional individual de cada um. 
+
+As sprints foram definidas de acordo com as entregas previstas no lab da disciplina, com duração média de duas semanas. A exceção foi a sprint final, que durou mais de um mês e concentrou a implementação das funcionalidades restantes, integração do sistema, correções e documentação. 
+
+Uma tarefa era considerada concluída quando a funcionalidade estivesse implementada e integrada ao projeto, e nas etapas finais constantemente era rodado o pipe de CI/CD para garantir que tudo estava nos conformes. Sessões semanais de code review e alinhamento eram feitas pra definir etapas novas e o que precisava ser feito, especialmente no último mês de desenvolvimento. 
+
+Como métricas, foram registrados 66 work items no Jira, sendo a maioria concluída (Done). Além disso, a análise de lead time indicou uma redução gradual do tempo médio de conclusão das tarefas ao longo do desenvolvimento, demonstrando maior familiaridade da equipe com o projeto e suas tecnologias, bem como uma prioridade para finalizar o que precisava ser feito no projeto.
+
+Link para o jira: https://labengsoftware.atlassian.net/?continue=https%3A%2F%2Flabengsoftware.atlassian.net%2Fwelcome%2Fsoftware%3FprojectId%3D10000&atlOrigin=eyJpIjoiZGMxNGY1NjdiMjUxNGQ0MDhlN2VjMDRlMmRhNTZiY2QiLCJwIjoiamlyYS1zb2Z0d2FyZSJ9
+---
+## Dinâmica de desenvolvimento 
+As tarefas foram distribuídas entre os integrantes de acordo com as necessidades de cada sprint. As decisões técnicas eram discutidas em grupo e registradas através das tarefas e histórias de usuário cadastradas no Jira. 
+
+O desenvolvimento foi realizado utilizando GitHub para versionamento e integração das funcionalidades desenvolvidas pelos membros da equipe. 
+
+Durante o projeto ocorreram alguns ajustes de prioridades e redistribuição de atividades, principalmente na sprint final, que concentrou boa parte do desenvolvimento e refinamento do sistema. 
+
+Como lição aprendida, a equipe percebeu a importância de utilizar ferramentas de gerenciamento de projetos de forma consistente desde o início. Embora o Jira tenha sido criado já no início do lab, seu uso tornou-se mais efetivo quando passou a ser um critério obrigatório da disciplina. Ainda assim, para ganhar tempo a comunicação costumava também ocorrer de forma extraoficial e nem sempre o Jira foi usado para toda e qualquer task. Todavia, a ferramenta contribuiu para a organização das tarefas, definição das histórias de usuário e acompanhamento do progresso do projeto, mostrando-se útil para o planejamento e execução das atividades, e em futuros projetos é importante que seja bem utilizado desde o começo. 
+
+---
+# Uso da IA
+## Modelos Utilizados
+
+Durante o desenvolvimento do projeto **Divide AI API**, foram utilizadas ferramentas de Inteligência Artificial para auxiliar em atividades de desenvolvimento, documentação, depuração e infraestrutura.
+
+Modelos e ferramentas utilizados:
+
+* ChatGPT (OpenAI – GPT-5 e GPT-5.5)
+* GitHub Copilot (auto e modelos disponíveis, como gpt 5 mini, claude haiku, etc)
+* Claude AI (Anthropic)
 
 ---
 
-**Última atualização**: Junho 2024
+## Para Que Foram Utilizados
+
+As ferramentas de IA foram utilizadas como apoio técnico nas seguintes atividades:
+
+* Geração e refatoração de código Python (FastAPI).
+* Estruturação de rotas, serviços e repositórios.
+* Auxílio na modelagem de entidades e relacionamentos.
+* Correção de erros de configuração em Docker.
+* Configuração de Jenkins para integração contínua (CI/CD).
+* Depuração de erros relacionados a ambiente, dependências e execução de pipelines.
+* Criação e revisão da documentação do projeto.
+* Brainstorming de soluções arquiteturais.
+* Análise de mensagens de erro e sugestões de correção.
+* Revisão de configurações de deploy e containers.
+* Montagem de história de usuário
+
+A IA foi utilizada como ferramenta de apoio ao desenvolvimento, sendo todas as sugestões avaliadas e validadas pela equipe antes de serem incorporadas ao projeto.
+
+---
+
+## Exemplos Reais de Prompts Utilizados
+
+### Exemplo 1: Configuração de Ambiente Python no Jenkins
+
+**Prompt:**
+
+> "A pipeline do Jenkins está falhando ao executar o comando pytest com o erro 'pytest: not found'. Como posso configurar corretamente o ambiente para executar os testes?"
+
+**Resultado:**
+
+A IA identificou que o ambiente do Jenkins não possuía um ambiente virtual Python configurado corretamente e sugeriu a criação de uma virtualenv dentro da pipeline, além da instalação das dependências utilizando o arquivo requirements.txt.
+
+**Ação:**
+
+**Aceito.** A pipeline foi modificada para criar e ativar um ambiente virtual Python antes da execução dos testes automatizados.
+
+---
+
+### Exemplo 2: Correção do Dockerfile do Jenkins
+
+**Prompt:**
+
+> "Eu estou com dois dockerfiles, o da aplicação e um Dockerfile.jenkins que copiei de um projeto anterior. Ele instala Node.js, XVFB e bibliotecas gráficas. Está correto para um projeto FastAPI?"
+
+**Resultado:**
+
+A IA identificou que o Dockerfile utilizado havia sido originalmente criado para projetos frontend com Cypress e que continha dependências desnecessárias para o contexto atual. Foi sugerida a remoção dos pacotes gráficos e a instalação dos pacotes necessários para execução de aplicações Python e ambientes virtuais.
+
+**Ação:**
+
+**Aceito.** O Dockerfile do Jenkins foi simplificado, removendo dependências não utilizadas e adicionando suporte adequado para Python e virtual environments.
+
+---
+
+### Exemplo 3: Inicialização do Container Jenkins com Suporte ao Docker
+
+**Prompt:**
+
+> "Estou executando o Jenkins em um container Docker, mas minhas pipelines não conseguem executar comandos Docker. Como devo iniciar o container?"
+
+**Resultado:**
+
+A IA identificou que o container Jenkins não possuía acesso ao daemon Docker do host. Foi sugerido o mapeamento do socket Docker (/var/run/docker.sock) e a utilização de um volume persistente para armazenamento dos dados do Jenkins.
+
+**Ação:**
+
+**Aceito.** O comando de inicialização do Jenkins foi alterado para incluir o mapeamento do socket Docker e a persistência de dados. Após a alteração, as pipelines passaram a conseguir construir e executar imagens Docker durante o processo de CI/CD.
+
+---
+
+### Exemplo 4: Investigação de Erro CORS no Deploy
+
+**Prompt:**
+
+> "O frontend hospedado na Vercel está recebendo erro de CORS ao acessar arquivos enviados para o Cloudflare R2. Como identificar a origem do problema?"
+
+**Resultado:**
+
+A IA auxiliou na análise do fluxo de requisições, identificando que a API retornava um redirecionamento para uma URL hospedada no Cloudflare R2 e que o bloqueio ocorria devido à ausência de configuração CORS adequada no bucket de armazenamento.
+
+**Ação:**
+
+**Aceito parcialmente.** A análise foi utilizada para direcionar a investigação do problema e validar que o erro não estava relacionado às rotas FastAPI, mas sim à integração com o serviço de armazenamento.
+
+---
+### Exemplo 5: Controle de Status de Pagamento
+
+**Prompt:**
+
+"Qual a melhor forma de modelar os estados de pagamento de uma dívida compartilhada entre vários participantes?"
+
+**Resultado:**
+
+A IA sugeriu a utilização de estados distintos para representar o ciclo de vida do pagamento (PENDENTE, PAGO e CONFIRMADO), permitindo que o criador da dívida validasse os comprovantes enviados pelos participantes antes da conclusão da cobrança.
+
+**Ação:**
+
+Aceito com adaptações. A equipe utilizou a proposta como base para implementar o fluxo de aprovação dos pagamentos, ajustando as regras conforme os requisitos específicos do sistema.
+---
+
+## Dinâmica de Uso
+
+A utilização das ferramentas de IA ocorreu principalmente de forma individual pelos integrantes durante o desenvolvimento das funcionalidades.
+
+As ferramentas foram utilizadas para:
+
+* Esclarecimento de dúvidas técnicas.
+* Implementações de features (com revisão e critério de aceite)
+* Revisão de implementações.
+* Investigação de erros.
+* Apoio na configuração de infraestrutura.
+* Geração de documentação.
+* Apoio em atividades de integração contínua (CI/CD).
+
+Nenhuma resposta gerada por IA foi incorporada automaticamente ao projeto sem revisão humana. Todas as sugestões foram analisadas, adaptadas quando necessário e validadas pelos integrantes antes de serem utilizadas.
+
+---
+
+## O Que Não Foi Feito por IA
+
+As seguintes atividades foram realizadas diretamente pelos integrantes da equipe:
+
+* Definição dos requisitos do sistema.
+* Modelagem das regras de negócio.
+* Implementação final das funcionalidades.
+* Criação e manutenção do banco de dados.
+* Tomada de decisões arquiteturais.
+* Integração entre frontend e backend.
+* Testes manuais e validação funcional.
+* Correção de problemas específicos encontrados durante o desenvolvimento.
+* Deploy e validação final da aplicação e do pipe de CI/CD.
+* 
+A Inteligência Artificial foi utilizada como ferramenta de apoio e consulta técnica, não substituindo o entendimento, a implementação e a validação realizadas pelos integrantes do grupo.
+
+
+**Última atualização**: Junho 2026

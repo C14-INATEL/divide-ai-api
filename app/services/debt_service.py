@@ -1,12 +1,13 @@
+import os
 import uuid
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime
 from fastapi import UploadFile
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.utils.storage import R2Storage
+from app.utils.storage import get_storage
 from app.schemas.debt import DebtCreate, DebtUpdate
 from app.repositories.group_repository import GroupRepository
 from app.repositories.user_repository import UserRepository
@@ -205,8 +206,9 @@ class DebtService:
             raise AppException(404, "Dívida não encontrada")
         if debt.creator_id != current_user_id:
             raise AppException(403, "Apenas o criador pode excluir esta dívida")
-        if debt.participants and len(debt.participants) > 0:
-            raise AppException(422, "Não é possível excluir uma dívida com participantes associados")
+        blocking_statuses = {ParticipantStatus.PAGO.value, ParticipantStatus.CONFIRMADO.value}
+        if any(p.status in blocking_statuses for p in debt.participants):
+            raise AppException(422, "Não é possível excluir uma dívida com pagamentos enviados ou confirmados")
         self.debt_repo.delete(debt)
 
     def upload_proof(
@@ -234,7 +236,7 @@ class DebtService:
             raise AppException(422, "file exceeds maximum size of 5 MB")
 
         key = f"debts/{debt_id}/{current_user_id}_{file.filename}"
-        proof_url = R2Storage().upload(content, key, content_type)
+        proof_url = get_storage().upload(content, key, content_type)
 
         participant.proof_url = proof_url
         participant.has_proof = True
