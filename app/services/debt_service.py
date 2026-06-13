@@ -279,15 +279,19 @@ class DebtService:
         current_user_id: uuid.UUID,
     ):
         debt = self.debt_repo.get_by_id(debt_id)
+
         if not debt:
             raise AppException(404, "Dívida não encontrada")
-        # requester must be group member
+
         self._assert_member(debt.group_id, current_user_id)
-        participant = self.debt_repo.get_participant(debt_id, participant_user_id)
-        proof_path = getattr(participant, "proof_path", None)
-        if not participant or not proof_path:
+
+        participant = self.debt_repo.get_participant(
+            debt_id,
+            participant_user_id
+        )
+
+        if not participant or not participant.proof_url:
             raise AppException(404, "Comprovante não encontrado")
-        if not os.path.exists(proof_path):
-            raise AppException(404, "Comprovante não encontrado no servidor")
-        return FileResponse(proof_path, filename=os.path.basename(proof_path))
+
+        return participant.proof_url
 
