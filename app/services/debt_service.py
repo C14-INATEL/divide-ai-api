@@ -281,19 +281,19 @@ class DebtService:
         current_user_id: uuid.UUID,
     ):
         debt = self.debt_repo.get_by_id(debt_id)
-
         if not debt:
             raise AppException(404, "Dívida não encontrada")
-
+        # requester must be group member
         self._assert_member(debt.group_id, current_user_id)
-
-        participant = self.debt_repo.get_participant(
-            debt_id,
-            participant_user_id
-        )
-
+        participant = self.debt_repo.get_participant(debt_id, participant_user_id)
         if not participant or not participant.proof_url:
             raise AppException(404, "Comprovante não encontrado")
-
-        return participant.proof_url
+        proof_url = participant.proof_url
+        # Remote storage (R2): the value is a public URL -> redirect to it.
+        if proof_url.startswith("http://") or proof_url.startswith("https://"):
+            return RedirectResponse(proof_url)
+        # Local storage: the value is a filesystem path -> serve the file.
+        if not os.path.exists(proof_url):
+            raise AppException(404, "Comprovante não encontrado no servidor")
+        return FileResponse(proof_url, filename=os.path.basename(proof_url))
 
