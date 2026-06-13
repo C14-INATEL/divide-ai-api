@@ -1,12 +1,20 @@
 # DivideAI - API REST
 
 ![DivideAI](https://img.shields.io/badge/API-FastAPI-009688?style=flat-square) ![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
-Henrique Pizzoni – Back-end (Dev, QA e DevOps) e Scrum Master 
-Davi Rosim – Back-end (Dev e QA) 
-João Pedro Martins - Back-end (Tech-lead, Dev e QA)  
-Tiago Andrade – Front-end (Dev e QA), Scrum Master 
-Juliano Aleixo – Front end (Dev, Tech Lead, QA e DevOps) 
-Leonardo Ferreira – Front end (Dev e QA) 
+
+Endpoint de produção: **https://divide-ai-api-repe.onrender.com/docs**
+
+Henrique Pizzoni/Back-end (Dev, QA e DevOps) e Scrum Master 
+
+Davi Rosim/Back-end (Dev e QA) 
+
+João Pedro Martins/Back-end (Tech-lead, Dev e QA)  
+
+Tiago Andrade/Front-end (Dev e QA), Scrum Master 
+
+Juliano Aleixo/Front end (Dev, Tech Lead, QA e DevOps) 
+
+Leonardo Ferreira/Front end (Dev e QA) 
 
 ---
 
@@ -56,7 +64,7 @@ Leonardo Ferreira – Front end (Dev e QA)
 - Docker e Docker Compose (opcional)
 - [uv](https://github.com/astral-sh/uv) - gerenciador de pacotes
 
-### Rodar Local - Forma 1: Sem Docker
+### Rodar Local
 
 ```bash
 # 1. Clonar o repositório
@@ -83,32 +91,6 @@ python run.py
 O servidor estará disponível em: **http://localhost:8000**
 
 Documentação interativa (Swagger): **http://localhost:8000/docs**
-
-### Rodar Local - Forma 2: Com Docker Compose
-
-```bash
-# 1. Clonar o repositório
-git clone https://github.com/C14-INATEL/divide-ai-api.git
-cd divide-ai-api
-
-# 2. Configurar variáveis de ambiente
-cp .env.example .env
-
-# 3. Subir containers (API + PostgreSQL)
-docker compose up -d --build
-
-# 4. Aplicar migrations
-docker compose exec api uv run alembic upgrade head
-
-# 5. Verificar se está rodando
-curl http://localhost:8000/docs
-```
-
-### Acesso Online
-
-A aplicação está configurada para ser deployada via **Jenkins + Docker** em um servidor de produção. Para detalhes sobre o pipeline de CI/CD, consulte [pipeline_instructions.md](pipeline_instructions.md).
-
-Endpoint de produção: *(será fornecido após deployment)*
 
 ---
 
@@ -506,7 +488,7 @@ As ferramentas de IA foram utilizadas como apoio técnico nas seguintes atividad
 * Brainstorming de soluções arquiteturais.
 * Análise de mensagens de erro e sugestões de correção.
 * Revisão de configurações de deploy e containers.
-* Montagem de história de usuário
+* Montagem de história de usuário e dessa seção.
 
 A IA foi utilizada como ferramenta de apoio ao desenvolvimento, sendo todas as sugestões avaliadas e validadas pela equipe antes de serem incorporadas ao projeto.
 
