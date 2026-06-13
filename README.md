@@ -506,7 +506,7 @@ As ferramentas de IA foram utilizadas como apoio técnico nas seguintes atividad
 * Brainstorming de soluções arquiteturais.
 * Análise de mensagens de erro e sugestões de correção.
 * Revisão de configurações de deploy e containers.
-* Montagem de história de usuário
+* Montagem de história de usuário e dessa seção.
 
 A IA foi utilizada como ferramenta de apoio ao desenvolvimento, sendo todas as sugestões avaliadas e validadas pela equipe antes de serem incorporadas ao projeto.
 
