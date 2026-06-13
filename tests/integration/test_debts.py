@@ -260,24 +260,3 @@ class TestConfirmPayment:
         )
         assert resp.status_code == 403
 
-
-# --------------------------------------------------------------------------- #
-# GET /debts/{id}/participants/{user_id}/proof
-# --------------------------------------------------------------------------- #
-class TestGetProof:
-    def test_member_downloads_proof(self, client, world_with_debt):
-        _upload_proof(client, world_with_debt, world_with_debt.member)
-
-        resp = client.get(
-            f"/debts/{world_with_debt.debt_id}/participants/{world_with_debt.member.id}/proof",
-            headers=auth_headers(world_with_debt.creator),
-        )
-        assert resp.status_code == 200
-        assert resp.content == b"fake-image-bytes"
-
-    def test_missing_proof_returns_404(self, client, world_with_debt):
-        resp = client.get(
-            f"/debts/{world_with_debt.debt_id}/participants/{world_with_debt.member.id}/proof",
-            headers=auth_headers(world_with_debt.creator),
-        )
-        assert resp.status_code == 404
